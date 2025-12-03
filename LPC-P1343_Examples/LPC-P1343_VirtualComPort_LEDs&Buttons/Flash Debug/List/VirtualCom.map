@@ -1,0 +1,607 @@
+###############################################################################
+#                                                                             #
+# IAR ELF Linker V5.41.0.51741/W32 for ARM              10/May/2010  10:06:40 #
+# Copyright (C) 2007-2009 IAR Systems AB.                                     #
+#                                                                             #
+#    Output file  =  D:\PENKO_D\Penko_Projects_Olimex\ARM\LPC\LPC-P1343\Softw #
+#                    are\LPC-P1343_Examples\LPC-P1343_VirtualComPort_LEDs&But #
+#                    tons\Flash Debug\Exe\VirtualCom.out.tmp                  #
+#    Map file     =  D:\PENKO_D\Penko_Projects_Olimex\ARM\LPC\LPC-P1343\Softw #
+#                    are\LPC-P1343_Examples\LPC-P1343_VirtualComPort_LEDs&But #
+#                    tons\Flash Debug\List\VirtualCom.map                     #
+#    Command line =  "D:\PENKO_D\Penko_Projects_Olimex\ARM\LPC\LPC-P1343\Soft #
+#                    ware\LPC-P1343_Examples\LPC-P1343_VirtualComPort_LEDs&Bu #
+#                    ttons\Flash Debug\Obj\cd_class.o"                        #
+#                    "D:\PENKO_D\Penko_Projects_Olimex\ARM\LPC\LPC-P1343\Soft #
+#                    ware\LPC-P1343_Examples\LPC-P1343_VirtualComPort_LEDs&Bu #
+#                    ttons\Flash Debug\Obj\cstartup_M.o"                      #
+#                    "D:\PENKO_D\Penko_Projects_Olimex\ARM\LPC\LPC-P1343\Soft #
+#                    ware\LPC-P1343_Examples\LPC-P1343_VirtualComPort_LEDs&Bu #
+#                    ttons\Flash Debug\Obj\main.o"                            #
+#                    "D:\PENKO_D\Penko_Projects_Olimex\ARM\LPC\LPC-P1343\Soft #
+#                    ware\LPC-P1343_Examples\LPC-P1343_VirtualComPort_LEDs&Bu #
+#                    ttons\Flash Debug\Obj\uart.o"                            #
+#                    "D:\PENKO_D\Penko_Projects_Olimex\ARM\LPC\LPC-P1343\Soft #
+#                    ware\LPC-P1343_Examples\LPC-P1343_VirtualComPort_LEDs&Bu #
+#                    ttons\Flash Debug\Obj\usb_buffer.o"                      #
+#                    "D:\PENKO_D\Penko_Projects_Olimex\ARM\LPC\LPC-P1343\Soft #
+#                    ware\LPC-P1343_Examples\LPC-P1343_VirtualComPort_LEDs&Bu #
+#                    ttons\Flash Debug\Obj\usb_dev_desc.o"                    #
+#                    "D:\PENKO_D\Penko_Projects_Olimex\ARM\LPC\LPC-P1343\Soft #
+#                    ware\LPC-P1343_Examples\LPC-P1343_VirtualComPort_LEDs&Bu #
+#                    ttons\Flash Debug\Obj\usb_hooks.o"                       #
+#                    "D:\PENKO_D\Penko_Projects_Olimex\ARM\LPC\LPC-P1343\Soft #
+#                    ware\LPC-P1343_Examples\LPC-P1343_VirtualComPort_LEDs&Bu #
+#                    ttons\Flash Debug\Obj\usb_hw.o"                          #
+#                    "D:\PENKO_D\Penko_Projects_Olimex\ARM\LPC\LPC-P1343\Soft #
+#                    ware\LPC-P1343_Examples\LPC-P1343_VirtualComPort_LEDs&Bu #
+#                    ttons\Flash Debug\Obj\usb_t9.o" --redirect               #
+#                    _Printf=_PrintfSmall --redirect _Scanf=_ScanfSmall -o    #
+#                    "D:\PENKO_D\Penko_Projects_Olimex\ARM\LPC\LPC-P1343\Soft #
+#                    ware\LPC-P1343_Examples\LPC-P1343_VirtualComPort_LEDs&Bu #
+#                    ttons\Flash Debug\Exe\VirtualCom.out.tmp" --map          #
+#                    "D:\PENKO_D\Penko_Projects_Olimex\ARM\LPC\LPC-P1343\Soft #
+#                    ware\LPC-P1343_Examples\LPC-P1343_VirtualComPort_LEDs&Bu #
+#                    ttons\Flash Debug\List\VirtualCom.map" --config          #
+#                    D:\PENKO_D\Penko_Projects_Olimex\ARM\LPC\LPC-P1343\Softw #
+#                    are\LPC-P1343_Examples\LPC-P1343_VirtualComPort_LEDs&But #
+#                    tons\config\LPC1343_Flash.icf --semihosting --entry      #
+#                    __iar_program_start --redirect                           #
+#                    __iar_sh_stdout=__iar_sh_stdout_swo                      #
+#                                                                             #
+#                                                                             #
+###############################################################################
+
+*******************************************************************************
+*** PLACEMENT SUMMARY
+***
+
+"A1":  place at 0x00000000 { ro section .intvec };
+"P1":  place in [from 0x00000124 to 0x00007fff] { ro };
+"P2":  place in [from 0x10000000 to 0x10001fff] {
+          rw, block CSTACK, block HEAP };
+
+  Section            Kind        Address    Size  Object
+  -------            ----        -------    ----  ------
+"A1":                                      0x124
+  .intvec            ro code  0x00000000   0x124  cstartup_M.o [1]
+                            - 0x00000124   0x124
+
+"P1":                                     0x3028
+  .text              ro code  0x00000124   0xd48  usb_t9.o [1]
+  .text              ro code  0x00000e6c   0xc4c  usb_hw.o [1]
+  .text              ro code  0x00001ab8   0x8f8  main.o [1]
+  .text              ro code  0x000023b0   0x2b0  cd_class.o [1]
+  .text              ro code  0x00002660   0x154  uart.o [1]
+  .text              ro code  0x000027b4    0x90  usb_buffer.o [1]
+  .rodata            const    0x00002844    0x88  usb_hw.o [1]
+  .rodata            const    0x000028cc    0x88  usb_t9.o [1]
+  .rodata            const    0x00002954    0x84  cd_class.o [1]
+  .rodata            const    0x000029d8    0x7c  main.o [1]
+  .text              ro code  0x00002a54    0x74  xreportassert.o [3]
+  .text              ro code  0x00002ac8    0x70  ABImemcpy.o [4]
+  .text              ro code  0x00002b38    0x50  iarwstdswo.o [5]
+  .text              ro code  0x00002b88    0x48  xassert.o [3]
+  .rodata            const    0x00002bd0    0x44  usb_dev_desc.o [1]
+  .rodata            const    0x00002c14    0x3c  main.o [1]
+  .rodata            const    0x00002c50    0x38  usb_hw.o [1]
+  .rodata            const    0x00002c88    0x34  main.o [1]
+  .rodata            const    0x00002cbc    0x34  main.o [1]
+  .text              ro code  0x00002cf0    0x32  usb_hooks.o [1]
+  .rodata            const    0x00002d24    0x30  xreportassert.o [3]
+  .rodata            const    0x00002d54    0x28  usb_hw.o [1]
+  .text              ro code  0x00002d7c    0x28  putchar.o [3]
+  .text              ro code  0x00002da4    0x24  copy_init2.o [4]
+  .text              ro code  0x00002dc8    0x22  iarwrite.o [5]
+  .iar.init_table    const    0x00002dec    0x24  - Linker created -
+  .text              ro code  0x00002e10    0x20  data_init2.o [4]
+  .text              ro code  0x00002e30    0x1e  dwrite.o [5]
+  .text              ro code  0x00002e50    0x1c  cd_class.o [1]
+  .text              ro code  0x00002e6c    0x1a  zero_init2.o [4]
+  .rodata            const    0x00002e88    0x18  usb_dev_desc.o [1]
+  .rodata            const    0x00002ea0    0x18  usb_dev_desc.o [1]
+  .rodata            const    0x00002eb8    0x18  usb_dev_desc.o [1]
+  .rodata            const    0x00002ed0    0x18  usb_dev_desc.o [1]
+  .rodata            const    0x00002ee8    0x18  usb_t9.o [1]
+  .text              ro code  0x00002f00    0x18  cd_class.o [1]
+  .text              ro code  0x00002f18    0x18  cmain.o [4]
+  .text              ro code  0x00002f30    0x16  cd_class.o [1]
+  .rodata            const    0x00002f48    0x14  usb_dev_desc.o [1]
+  .rodata            const    0x00002f5c    0x14  usb_dev_desc.o [1]
+  .rodata            const    0x00002f70    0x14  usb_dev_desc.o [1]
+  .rodata            const    0x00002f84    0x14  usb_hw.o [1]
+  .rodata            const    0x00002f98    0x14  usb_hw.o [1]
+  .rodata            const    0x00002fac    0x14  usb_hw.o [1]
+  .rodata            const    0x00002fc0    0x14  usb_hw.o [1]
+  .rodata            const    0x00002fd4    0x14  usb_t9.o [1]
+  .rodata            const    0x00002fe8    0x14  usb_t9.o [1]
+  .text              ro code  0x00002ffc    0x14  exit.o [5]
+  .rodata            const    0x00003010    0x10  cd_class.o [1]
+  .rodata            const    0x00003020    0x10  cd_class.o [1]
+  .rodata            const    0x00003030    0x10  usb_dev_desc.o [1]
+  .rodata            const    0x00003040    0x10  usb_dev_desc.o [1]
+  .rodata            const    0x00003050    0x10  usb_dev_desc.o [1]
+  .rodata            const    0x00003060    0x10  usb_t9.o [1]
+  .text              ro code  0x00003070    0x10  write.o [5]
+  .rodata            const    0x00003080     0xc  usb_dev_desc.o [1]
+  .rodata            const    0x0000308c     0xc  usb_t9.o [1]
+  .text              ro code  0x00003098     0xa  cexit.o [4]
+  .rodata            const    0x000030a4     0x8  main.o [1]
+  .rodata            const    0x000030ac     0x8  usb_dev_desc.o [1]
+  .rodata            const    0x000030b4     0x8  usb_dev_desc.o [1]
+  .rodata            const    0x000030bc     0x8  usb_dev_desc.o [1]
+  .rodata            const    0x000030c4     0x8  usb_dev_desc.o [1]
+  .rodata            const    0x000030cc     0x8  usb_dev_desc.o [1]
+  .rodata            const    0x000030d4     0x8  usb_hw.o [1]
+  .rodata            const    0x000030dc     0x8  usb_hw.o [1]
+  .rodata            const    0x000030e4     0x8  usb_hw.o [1]
+  .text              ro code  0x000030ec     0x8  abort.o [3]
+  .text              ro code  0x000030f4     0x6  exit.o [3]
+  .rodata            const    0x000030fc     0x4  usb_hw.o [1]
+  .rodata            const    0x00003100     0x4  usb_hw.o [1]
+  .text              ro code  0x00003104     0x4  low_level_init.o [3]
+  .text              ro code  0x00003108     0x2  cstartup_M.o [1]
+  Initializer bytes  ro data  0x0000310c    0x40  <for P2 s0>
+                            - 0x0000314c  0x3028
+
+"P2", part 1 of 3:                         0x800
+  CSTACK                      0x10000000   0x800  <Block>
+    CSTACK           uninit   0x10000000   0x800  <Block tail>
+                            - 0x10000800   0x800
+
+"P2", part 2 of 3:                          0x40
+  P2 s0                       0x10000800    0x40  <Init block>
+    .data            inited   0x10000800    0x20  main.o [1]
+    .data            inited   0x10000820    0x20  main.o [1]
+                            - 0x10000840    0x40
+
+"P2", part 3 of 3:                         0x1f4
+  .bss               zero     0x10000840   0x140  usb_hw.o [1]
+  .bss               zero     0x10000980    0x40  cd_class.o [1]
+  .bss               zero     0x100009c0    0x1c  usb_t9.o [1]
+  .bss               zero     0x100009dc     0x8  cd_class.o [1]
+  .bss               zero     0x100009e4     0x8  cd_class.o [1]
+  .bss               zero     0x100009ec     0x8  usb_t9.o [1]
+  .bss               zero     0x100009f4     0x4  cd_class.o [1]
+  .bss               zero     0x100009f8     0x4  cd_class.o [1]
+  .bss               zero     0x100009fc     0x4  cd_class.o [1]
+  .bss               zero     0x10000a00     0x4  cd_class.o [1]
+  .bss               zero     0x10000a04     0x4  cd_class.o [1]
+  .bss               zero     0x10000a08     0x4  cd_class.o [1]
+  .bss               zero     0x10000a0c     0x4  cd_class.o [1]
+  .bss               zero     0x10000a10     0x4  main.o [1]
+  .bss               zero     0x10000a14     0x4  main.o [1]
+  .bss               zero     0x10000a18     0x4  uart.o [1]
+  .bss               zero     0x10000a1c     0x4  uart.o [1]
+  .bss               zero     0x10000a20     0x4  uart.o [1]
+  .bss               zero     0x10000a24     0x4  usb_hw.o [1]
+  .bss               zero     0x10000a28     0x4  usb_t9.o [1]
+  .bss               zero     0x10000a2c     0x4  usb_t9.o [1]
+  .bss               zero     0x10000a30     0x1  main.o [1]
+  .bss               zero     0x10000a31     0x1  main.o [1]
+  .bss               zero     0x10000a32     0x1  main.o [1]
+                            - 0x10000a33   0x1f3
+
+
+*******************************************************************************
+*** INIT TABLE
+***
+
+          Address     Size
+          -------     ----
+Zero (__iar_zero_init2)
+    1 destination range, total size 0x1f3:
+          0x10000840  0x1f3
+
+Copy (__iar_copy_init2)
+    1 source range, total size 0x40 (100% of destination):
+          0x0000310c   0x40
+    1 destination range, total size 0x40:
+          0x10000800   0x40
+
+
+*******************************************************************************
+*** MODULE SUMMARY
+***
+
+    Module            ro code  ro data  rw data
+    ------            -------  -------  -------
+D:\PENKO_D\Penko_Projects_Olimex\ARM\LPC\LPC-P1343\Software\LPC-P1343_Examples\LPC-P1343_VirtualComPort_LEDs&Buttons\Flash Debug\Obj: [1]
+    cd_class.o            762      164      108
+    cstartup_M.o          294
+    main.o              2 296      360       75
+    uart.o                340                12
+    usb_buffer.o          144
+    usb_dev_desc.o                 324
+    usb_hooks.o            50
+    usb_hw.o            3 148      344      324
+    usb_t9.o            3 400      228       44
+    -------------------------------------------
+    Total:             10 434    1 420      563
+
+command line: [2]
+    -------------------------------------------
+    Total:
+
+dl7M_tl_in.a: [3]
+    abort.o                 8
+    exit.o                  6
+    low_level_init.o        4
+    putchar.o              40
+    xassert.o              72
+    xreportassert.o       116       48
+    -------------------------------------------
+    Total:                246       48
+
+rt7M_tl.a: [4]
+    ABImemcpy.o           112
+    cexit.o                10
+    cmain.o                24
+    copy_init2.o           36
+    data_init2.o           32
+    zero_init2.o           26
+    -------------------------------------------
+    Total:                240
+
+shb_l.a: [5]
+    dwrite.o               30
+    exit.o                 20
+    iarwrite.o             34
+    iarwstdswo.o           80
+    write.o                16
+    -------------------------------------------
+    Total:                180
+
+    Gaps                    2       12
+    Linker created                  38    2 048
+-----------------------------------------------
+    Grand Total:       11 102    1 518    2 611
+
+
+*******************************************************************************
+*** ENTRY LIST
+***
+
+Entry                      Address   Size  Type      Object
+-----                      -------   ----  ----      ------
+ADC_IRQHandler          0x00003109         Code  Wk  cstartup_M.o [1]
+BOD_IRQHandler          0x00003109         Code  Wk  cstartup_M.o [1]
+BUT1_Command            0x10000800   0x20  Data  Gb  main.o [1]
+BUT2_Command            0x10000820   0x20  Data  Gb  main.o [1]
+BusFault_Handler        0x00003109         Code  Wk  cstartup_M.o [1]
+Buttons_Scan_Counter    0x10000a30    0x1  Data  Gb  main.o [1]
+CDC_Configure           0x100009f8    0x4  Data  Lc  cd_class.o [1]
+CDC_LineCoding          0x100009dc    0x8  Data  Lc  cd_class.o [1]
+CSTACK$$Base            0x10000000          --   Gb  - Linker created -
+CSTACK$$Limit           0x10000800          --   Gb  - Linker created -
+CT16B0_IRQHandler       0x000021bb   0xb2  Code  Gb  main.o [1]
+CT16B0_Init             0x00001e21   0xbe  Code  Gb  main.o [1]
+CT16B1_IRQHandler       0x00003109         Code  Wk  cstartup_M.o [1]
+CT32B0_IRQHandler       0x00001df9   0x28  Code  Gb  main.o [1]
+CT32B1_IRQHandler       0x00003109         Code  Wk  cstartup_M.o [1]
+CdcReqPacket            0x100009e4    0x8  Data  Lc  cd_class.o [1]
+CriticalSecCntr         0x10000a10    0x4  Data  Gb  main.o [1]
+Current_Detected_Button
+                        0x10000a32    0x1  Data  Gb  main.o [1]
+DebugMon_Handler        0x00003109         Code  Wk  cstartup_M.o [1]
+EntrCritSection         0x00002e51   0x1c  Code  Gb  cd_class.o [1]
+EpCnfg                  0x10000840  0x140  Data  Gb  usb_hw.o [1]
+ExtCritSection          0x00002f01   0x18  Code  Gb  cd_class.o [1]
+FifoPop                 0x0000268d   0x30  Code  Lc  uart.o [1]
+FifoPush                0x00002661   0x2c  Code  Lc  uart.o [1]
+GpioInit                0x00001c33  0x1c6  Code  Gb  main.o [1]
+HardFault_Handler       0x00003109         Code  Wk  cstartup_M.o [1]
+I2C0_IRQHandler         0x00003109         Code  Wk  cstartup_M.o [1]
+InData                  0x10000a28    0x4  Data  Lc  usb_t9.o [1]
+InitClock               0x00001b63   0xd0  Code  Gb  main.o [1]
+IsUsbCdcConfigure       0x0000243b    0x6  Code  Gb  cd_class.o [1]
+LineCodingDelta         0x100009f4    0x4  Data  Lc  cd_class.o [1]
+ManufacturerStrLan1     0x00002e88   0x18  Data  Gb  usb_dev_desc.o [1]
+ManufacturerStrLan2     0x00002ea0   0x18  Data  Gb  usb_dev_desc.o [1]
+MemManage_Handler       0x00003109         Code  Wk  cstartup_M.o [1]
+NMI_Handler             0x00003109         Code  Wk  cstartup_M.o [1]
+NVIC_ClrPend            0x00001af7   0x3e  Code  Gb  main.o [1]
+NVIC_IntEnable          0x00001ab9   0x3e  Code  Gb  main.o [1]
+NVIC_IntPri             0x00001b35   0x2e  Code  Gb  main.o [1]
+PIO0_IRQHandler         0x00003109         Code  Wk  cstartup_M.o [1]
+PIO1_IRQHandler         0x00003109         Code  Wk  cstartup_M.o [1]
+PIO2_IRQHandler         0x00003109         Code  Wk  cstartup_M.o [1]
+PIO3_IRQHandler         0x00003109         Code  Wk  cstartup_M.o [1]
+PendSV_Handler          0x00003109         Code  Wk  cstartup_M.o [1]
+Previous_Detected_Button
+                        0x10000a31    0x1  Data  Gb  main.o [1]
+ProductStrLan1          0x00002eb8   0x18  Data  Gb  usb_dev_desc.o [1]
+ProductStrLan2          0x00002ed0   0x18  Data  Gb  usb_dev_desc.o [1]
+Region$$Table$$Base     0x00002dec          --   Gb  - Linker created -
+Region$$Table$$Limit    0x00002e10          --   Gb  - Linker created -
+RxBuffer                0x10000980   0x40  Data  Lc  cd_class.o [1]
+RxDone                  0x10000a0c    0x4  Data  Lc  cd_class.o [1]
+RxSize                  0x100009fc    0x4  Data  Lc  cd_class.o [1]
+RxSizeHold              0x10000a00    0x4  Data  Lc  cd_class.o [1]
+SSP0_IRQHandler         0x00003109         Code  Wk  cstartup_M.o [1]
+SVC_Handler             0x00003109         Code  Wk  cstartup_M.o [1]
+SerialNumberStrLan1     0x00002f5c   0x14  Data  Gb  usb_dev_desc.o [1]
+SysTick_Handler         0x00003109         Code  Wk  cstartup_M.o [1]
+TMR16B0MR0              0x4000c018    0x2  Data  Wk  main.o [1]
+TMR16B0PC               0x4000c010    0x2  Data  Wk  main.o [1]
+TMR16B0PR               0x4000c00c    0x2  Data  Wk  main.o [1]
+Ticks                   0x10000a14    0x4  Data  Gb  main.o [1]
+TxDone                  0x10000a08    0x4  Data  Lc  cd_class.o [1]
+TxSize                  0x10000a04    0x4  Data  Lc  cd_class.o [1]
+U0RBRTHR                0x40008000    0x1  Data  Wk  uart.o [1]
+UART0_IRQHandler        0x000026bd   0xe0  Code  Gb  uart.o [1]
+USBFIQ_IRQHandler       0x00003109         Code  Wk  cstartup_M.o [1]
+USBIRQ_IRQHandler       0x00001841  0x1e4  Code  Gb  usb_hw.o [1]
+USBRxData               0x40020018    0x4  Data  Wk  usb_hw.o [1]
+USBTxData               0x4002001c    0x4  Data  Wk  usb_hw.o [1]
+USB_AddStatusEndHandler
+                        0x00000495   0x50  Code  Lc  usb_t9.o [1]
+USB_CLASS_REQUEST_HOOK  0x00002d11    0xc  Code  Gb  usb_hooks.o [1]
+USB_CONFIGURE_HOOK      0x00002cfb    0xc  Code  Gb  usb_hooks.o [1]
+USB_CONNECT_HOOK        0x00002cf5    0x2  Code  Gb  usb_hooks.o [1]
+USB_Cmd                 0x00000e6d  0x150  Code  Lc  usb_hw.o [1]
+USB_Configure           0x00001283   0x10  Code  Gb  usb_hw.o [1]
+USB_ConnectRes          0x00001269   0x1a  Code  Gb  usb_hw.o [1]
+USB_CtrlEpDescr0        0x000030dc    0x8  Data  Lc  usb_hw.o [1]
+USB_CtrlEpDescr1        0x000030e4    0x8  Data  Lc  usb_hw.o [1]
+USB_CtrlEpExtDescr0     0x000030fc    0x4  Data  Lc  usb_hw.o [1]
+USB_CtrlEpExtDescr1     0x00003100    0x4  Data  Lc  usb_hw.o [1]
+USB_DevStatus           0x10000a24    0x4  Data  Lc  usb_hw.o [1]
+USB_EP_ExtFind          0x00000d9d   0x32  Code  Gb  usb_t9.o [1]
+USB_EP_IO               0x00001349  0x4ce  Code  Gb  usb_hw.o [1]
+USB_EP_STALL_HOOK       0x00002d07    0x2  Code  Gb  usb_hooks.o [1]
+USB_EP_UNSTALL_HOOK     0x00002d09    0x2  Code  Gb  usb_hooks.o [1]
+USB_EpIntrClr           0x00000fbd   0x32  Code  Lc  usb_hw.o [1]
+USB_EpLogToPhysAdd      0x00001817   0x14  Code  Gb  usb_hw.o [1]
+USB_GET_DESCRIPTOR_HOOK
+                        0x00002d0b    0x6  Code  Gb  usb_hooks.o [1]
+USB_GetStallEP          0x00001327   0x22  Code  Gb  usb_hw.o [1]
+USB_HwInit              0x00000fef  0x102  Code  Gb  usb_hw.o [1]
+USB_HwReset             0x000010f1   0x40  Code  Gb  usb_hw.o [1]
+USB_INTR_ENTRY_HOOK     0x00002cf1    0x2  Code  Gb  usb_hooks.o [1]
+USB_INTR_EXIT_HOOK      0x00002cf3    0x2  Code  Gb  usb_hooks.o [1]
+USB_IO_Data             0x000027b5   0x90  Code  Gb  usb_buffer.o [1]
+USB_RESET_HOOK          0x00002cf9    0x2  Code  Gb  usb_hooks.o [1]
+USB_RealizeEp           0x00001131  0x11a  Code  Gb  usb_hw.o [1]
+USB_SUSPEND_HOOK        0x00002cf7    0x2  Code  Gb  usb_hooks.o [1]
+USB_SetAdd              0x0000124b   0x1e  Code  Gb  usb_hw.o [1]
+USB_SetStallEP          0x00001293   0x68  Code  Gb  usb_hw.o [1]
+USB_SetupHandler        0x00000333   0xfe  Code  Gb  usb_t9.o [1]
+USB_StallCtrlEP         0x000012fb   0x2c  Code  Gb  usb_hw.o [1]
+USB_StatusEndHandler    0x00000473   0x22  Code  Lc  usb_t9.o [1]
+USB_StatusHandler       0x00000431   0x42  Code  Gb  usb_t9.o [1]
+USB_StatusPhase         0x0000182b   0x16  Code  Gb  usb_hw.o [1]
+USB_T9_Size             0x0000030f   0x24  Code  Gb  usb_t9.o [1]
+USB_VENDOR_REQUEST_HOOK
+                        0x00002d1d    0x6  Code  Gb  usb_hooks.o [1]
+Uart0LineEvents         0x10000a20    0x4  Data  Gb  uart.o [1]
+UsageFault_Handler      0x00003109         Code  Wk  cstartup_M.o [1]
+UsbCdcConfigure         0x000023e5   0x56  Code  Gb  cd_class.o [1]
+UsbCdcData              0x000024c1   0x28  Code  Gb  cd_class.o [1]
+UsbCdcInit              0x000023b1   0x34  Code  Gb  cd_class.o [1]
+UsbCdcRead              0x00002545   0x86  Code  Gb  cd_class.o [1]
+UsbCdcReadHandler       0x000024e9   0x2e  Code  Lc  cd_class.o [1]
+UsbCdcRequest           0x00002441   0x80  Code  Gb  cd_class.o [1]
+UsbCdcWrite             0x000025cb   0x4e  Code  Gb  cd_class.o [1]
+UsbCdcWriteHandler      0x00002517   0x2e  Code  Lc  cd_class.o [1]
+UsbClearDevFeature      0x000007a5   0x26  Code  Lc  usb_t9.o [1]
+UsbClearEpFeature       0x000007d1   0x3a  Code  Lc  usb_t9.o [1]
+UsbClearFeature         0x0000080b   0xe6  Code  Lc  usb_t9.o [1]
+UsbClearInterfaceFeature
+                        0x000007cb    0x6  Code  Lc  usb_t9.o [1]
+UsbCoreInit             0x00000125   0x48  Code  Gb  usb_t9.o [1]
+UsbCoreReq              0x0000016d   0x66  Code  Gb  usb_t9.o [1]
+UsbDescArray            0x00002f70   0x14  Data  Gb  usb_dev_desc.o [1]
+UsbDevConnectCallback   0x000002bf   0x1c  Code  Gb  usb_t9.o [1]
+UsbDevCtrl              0x100009c0   0x1c  Data  Lc  usb_t9.o [1]
+UsbDevResetCallback     0x00000301    0xe  Code  Gb  usb_t9.o [1]
+UsbDevStatus            0x00000677   0x2e  Code  Lc  usb_t9.o [1]
+UsbDevSuspendCallback   0x000002db   0x26  Code  Gb  usb_t9.o [1]
+UsbEPExt_Cfg0EP1        0x000030b4    0x8  Data  Lc  usb_dev_desc.o [1]
+UsbEPExt_Cfg0EP2        0x000030bc    0x8  Data  Lc  usb_dev_desc.o [1]
+UsbEPExt_Cfg0EP3        0x000030c4    0x8  Data  Lc  usb_dev_desc.o [1]
+UsbEp0SetupPacket       0x100009ec    0x8  Data  Gb  usb_t9.o [1]
+UsbEpDoubleBuffType     0x00002d54   0x28  Data  Lc  usb_hw.o [1]
+UsbEpInterfaceCnfg      0x00000dcf   0x56  Code  Lc  usb_t9.o [1]
+UsbEpStatus             0x000006c5   0x40  Code  Lc  usb_t9.o [1]
+UsbFS_Cfg0              0x00002bd0   0x44  Data  Gb  usb_dev_desc.o [1]
+UsbFS_CfgArray          0x000030ac    0x8  Data  Lc  usb_dev_desc.o [1]
+UsbFS_EPExtArray        0x00003030   0x10  Data  Lc  usb_dev_desc.o [1]
+UsbFS_StringArray       0x00003080    0xc  Data  Lc  usb_dev_desc.o [1]
+UsbFindConfiguration    0x0000052f   0x32  Code  Lc  usb_t9.o [1]
+UsbFindEP               0x00000561   0x78  Code  Lc  usb_t9.o [1]
+UsbFindInterface        0x000004e5   0x4a  Code  Lc  usb_t9.o [1]
+UsbGetConfiguration     0x00000c2f   0x46  Code  Lc  usb_t9.o [1]
+UsbGetDescriptor        0x00000b9d   0x76  Code  Lc  usb_t9.o [1]
+UsbGetDescriptorConfiguration
+                        0x00000ab3   0x40  Code  Lc  usb_t9.o [1]
+UsbGetDescriptorDevice  0x00000a81   0x32  Code  Lc  usb_t9.o [1]
+UsbGetDescriptorString  0x00000af3   0xaa  Code  Lc  usb_t9.o [1]
+UsbGetInterface         0x00000caf   0x4c  Code  Lc  usb_t9.o [1]
+UsbGetStatus            0x00000705   0xa0  Code  Lc  usb_t9.o [1]
+UsbInterfaceStatus      0x000006a5   0x20  Code  Lc  usb_t9.o [1]
+UsbLanguages1Strings    0x00003040   0x10  Data  Gb  usb_dev_desc.o [1]
+UsbLanguages2Strings    0x00003050   0x10  Data  Gb  usb_dev_desc.o [1]
+UsbLanguagesStr         0x000030cc    0x8  Data  Gb  usb_dev_desc.o [1]
+UsbSetAddress           0x00000a35   0x4c  Code  Lc  usb_t9.o [1]
+UsbSetConfiguration     0x00000c75   0x3a  Code  Lc  usb_t9.o [1]
+UsbSetConfigurtonState  0x000005d9   0x9e  Code  Lc  usb_t9.o [1]
+UsbSetDescriptor        0x00000c13   0x1c  Code  Lc  usb_t9.o [1]
+UsbSetDevFeature        0x000008f1   0x26  Code  Lc  usb_t9.o [1]
+UsbSetDevState          0x000001d3   0xec  Code  Gb  usb_t9.o [1]
+UsbSetEpFeature         0x0000091d   0x3a  Code  Lc  usb_t9.o [1]
+UsbSetFeature           0x00000957   0xde  Code  Lc  usb_t9.o [1]
+UsbSetInterface         0x00000cfb   0x9e  Code  Lc  usb_t9.o [1]
+UsbSetInterfaceFeature  0x00000917    0x6  Code  Lc  usb_t9.o [1]
+UsbStandardDeviceDescriptorStr
+                        0x00002f48   0x14  Data  Gb  usb_dev_desc.o [1]
+UsbSynchFrame           0x00000e25    0x8  Code  Lc  usb_t9.o [1]
+WAKE_UP0_IRQHandler     0x00003109         Code  Wk  cstartup_M.o [1]
+WAKE_UP10_IRQHandler    0x00003109         Code  Wk  cstartup_M.o [1]
+WAKE_UP11_IRQHandler    0x00003109         Code  Wk  cstartup_M.o [1]
+WAKE_UP12_IRQHandler    0x00003109         Code  Wk  cstartup_M.o [1]
+WAKE_UP13_IRQHandler    0x00003109         Code  Wk  cstartup_M.o [1]
+WAKE_UP14_IRQHandler    0x00003109         Code  Wk  cstartup_M.o [1]
+WAKE_UP15_IRQHandler    0x00003109         Code  Wk  cstartup_M.o [1]
+WAKE_UP16_IRQHandler    0x00003109         Code  Wk  cstartup_M.o [1]
+WAKE_UP17_IRQHandler    0x00003109         Code  Wk  cstartup_M.o [1]
+WAKE_UP18_IRQHandler    0x00003109         Code  Wk  cstartup_M.o [1]
+WAKE_UP19_IRQHandler    0x00003109         Code  Wk  cstartup_M.o [1]
+WAKE_UP1_IRQHandler     0x00003109         Code  Wk  cstartup_M.o [1]
+WAKE_UP20_IRQHandler    0x00003109         Code  Wk  cstartup_M.o [1]
+WAKE_UP21_IRQHandler    0x00003109         Code  Wk  cstartup_M.o [1]
+WAKE_UP22_IRQHandler    0x00003109         Code  Wk  cstartup_M.o [1]
+WAKE_UP23_IRQHandler    0x00003109         Code  Wk  cstartup_M.o [1]
+WAKE_UP24_IRQHandler    0x00003109         Code  Wk  cstartup_M.o [1]
+WAKE_UP25_IRQHandler    0x00003109         Code  Wk  cstartup_M.o [1]
+WAKE_UP26_IRQHandler    0x00003109         Code  Wk  cstartup_M.o [1]
+WAKE_UP27_IRQHandler    0x00003109         Code  Wk  cstartup_M.o [1]
+WAKE_UP28_IRQHandler    0x00003109         Code  Wk  cstartup_M.o [1]
+WAKE_UP29_IRQHandler    0x00003109         Code  Wk  cstartup_M.o [1]
+WAKE_UP2_IRQHandler     0x00003109         Code  Wk  cstartup_M.o [1]
+WAKE_UP30_IRQHandler    0x00003109         Code  Wk  cstartup_M.o [1]
+WAKE_UP31_IRQHandler    0x00003109         Code  Wk  cstartup_M.o [1]
+WAKE_UP32_IRQHandler    0x00003109         Code  Wk  cstartup_M.o [1]
+WAKE_UP33_IRQHandler    0x00003109         Code  Wk  cstartup_M.o [1]
+WAKE_UP34_IRQHandler    0x00003109         Code  Wk  cstartup_M.o [1]
+WAKE_UP35_IRQHandler    0x00003109         Code  Wk  cstartup_M.o [1]
+WAKE_UP36_IRQHandler    0x00003109         Code  Wk  cstartup_M.o [1]
+WAKE_UP37_IRQHandler    0x00003109         Code  Wk  cstartup_M.o [1]
+WAKE_UP38_IRQHandler    0x00003109         Code  Wk  cstartup_M.o [1]
+WAKE_UP39_IRQHandler    0x00003109         Code  Wk  cstartup_M.o [1]
+WAKE_UP3_IRQHandler     0x00003109         Code  Wk  cstartup_M.o [1]
+WAKE_UP4_IRQHandler     0x00003109         Code  Wk  cstartup_M.o [1]
+WAKE_UP5_IRQHandler     0x00003109         Code  Wk  cstartup_M.o [1]
+WAKE_UP6_IRQHandler     0x00003109         Code  Wk  cstartup_M.o [1]
+WAKE_UP7_IRQHandler     0x00003109         Code  Wk  cstartup_M.o [1]
+WAKE_UP8_IRQHandler     0x00003109         Code  Wk  cstartup_M.o [1]
+WAKE_UP9_IRQHandler     0x00003109         Code  Wk  cstartup_M.o [1]
+WDT_IRQHandler          0x00003109         Code  Wk  cstartup_M.o [1]
+_A_CLRPEND0             0xe000e280    0x4  Data  Wk  main.o [1]
+_A_GPIO0DIR             0x50008000    0x4  Data  Wk  main.o [1]
+_A_GPIO1DATA            0x50013ffc    0x4  Data  Wk  main.o [1]
+_A_GPIO1DIR             0x50018000    0x4  Data  Wk  main.o [1]
+_A_GPIO2DATA            0x50023ffc    0x4  Data  Wk  main.o [1]
+_A_GPIO2DIR             0x50028000    0x4  Data  Wk  main.o [1]
+_A_GPIO3DATA            0x50033ffc    0x4  Data  Wk  main.o [1]
+_A_GPIO3DIR             0x50038000    0x4  Data  Wk  main.o [1]
+_A_IOCON_JTAG_TCK_PIO0_10
+                        0x40044068    0x4  Data  Wk  main.o [1]
+_A_IOCON_JTAG_TDI_PIO0_11
+                        0x40044074    0x4  Data  Wk  main.o [1]
+_A_IOCON_JTAG_TDO_PIO1_1
+                        0x4004407c    0x4  Data  Wk  main.o [1]
+_A_IOCON_JTAG_TMS_PIO1_0
+                        0x40044078    0x4  Data  Wk  main.o [1]
+_A_IOCON_JTAG_nTRST_PIO1_2
+                        0x40044080    0x4  Data  Wk  main.o [1]
+_A_IOCON_PIO0_1         0x40044010    0x4  Data  Wk  main.o [1]
+_A_IOCON_PIO0_2         0x4004401c    0x4  Data  Wk  main.o [1]
+_A_IOCON_PIO0_3         0x4004402c    0x4  Data  Wk  main.o [1]
+_A_IOCON_PIO0_4         0x40044030    0x4  Data  Wk  main.o [1]
+_A_IOCON_PIO0_5         0x40044034    0x4  Data  Wk  main.o [1]
+_A_IOCON_PIO0_6         0x4004404c    0x4  Data  Wk  main.o [1]
+_A_IOCON_PIO0_7         0x40044050    0x4  Data  Wk  main.o [1]
+_A_IOCON_PIO0_8         0x40044060    0x4  Data  Wk  main.o [1]
+_A_IOCON_PIO1_10        0x4004406c    0x4  Data  Wk  main.o [1]
+_A_IOCON_PIO1_11        0x40044098    0x4  Data  Wk  main.o [1]
+_A_IOCON_PIO1_4         0x40044094    0x4  Data  Wk  main.o [1]
+_A_IOCON_PIO1_5         0x400440a0    0x4  Data  Wk  main.o [1]
+_A_IOCON_PIO1_8         0x40044014    0x4  Data  Wk  main.o [1]
+_A_IOCON_PIO1_9         0x40044038    0x4  Data  Wk  main.o [1]
+_A_IOCON_PIO2_0         0x40044008    0x4  Data  Wk  main.o [1]
+_A_IOCON_PIO2_1         0x40044028    0x4  Data  Wk  main.o [1]
+_A_IOCON_PIO2_10        0x40044058    0x4  Data  Wk  main.o [1]
+_A_IOCON_PIO2_11        0x40044070    0x4  Data  Wk  main.o [1]
+_A_IOCON_PIO2_2         0x4004405c    0x4  Data  Wk  main.o [1]
+_A_IOCON_PIO2_3         0x4004408c    0x4  Data  Wk  main.o [1]
+_A_IOCON_PIO2_4         0x40044040    0x4  Data  Wk  main.o [1]
+_A_IOCON_PIO2_5         0x40044044    0x4  Data  Wk  main.o [1]
+_A_IOCON_PIO2_6         0x40044000    0x4  Data  Wk  main.o [1]
+_A_IOCON_PIO2_7         0x40044020    0x4  Data  Wk  main.o [1]
+_A_IOCON_PIO2_8         0x40044024    0x4  Data  Wk  main.o [1]
+_A_IOCON_PIO2_9         0x40044054    0x4  Data  Wk  main.o [1]
+_A_IOCON_PIO3_0         0x40044084    0x4  Data  Wk  main.o [1]
+_A_IOCON_PIO3_1         0x40044088    0x4  Data  Wk  main.o [1]
+_A_IOCON_PIO3_2         0x4004409c    0x4  Data  Wk  main.o [1]
+_A_IOCON_PIO3_3         0x400440ac    0x4  Data  Wk  main.o [1]
+_A_IOCON_RESET_PIO0_0   0x4004400c    0x4  Data  Wk  main.o [1]
+_A_IOCON_SCKLOC         0x400440b0    0x4  Data  Wk  main.o [1]
+_A_IOCON_SWD_PIO1_3     0x40044090    0x4  Data  Wk  main.o [1]
+_A_IP0                  0xe000e400    0x4  Data  Wk  main.o [1]
+_A_MAINCLKSEL           0x40048070    0x4  Data  Wk  main.o [1]
+_A_MAINCLKUEN           0x40048074    0x4  Data  Wk  main.o [1]
+_A_PDRUNCFG             0x40048238    0x4  Data  Wk  main.o [1]
+_A_SETENA0              0xe000e100    0x4  Data  Wk  main.o [1]
+_A_SYSAHBCLKCTRL        0x40048080    0x4  Data  Wk  main.o [1]
+_A_SYSAHBCLKDIV         0x40048078    0x4  Data  Wk  main.o [1]
+_A_SYSOSCCLTRL          0x40048020    0x4  Data  Wk  main.o [1]
+_A_SYSPLLCLKSEL         0x40048040    0x4  Data  Wk  main.o [1]
+_A_SYSPLLCLKUEN         0x40048044    0x4  Data  Wk  main.o [1]
+_A_SYSPLLCTRL           0x40048008    0x4  Data  Wk  main.o [1]
+_A_SYSPLLSTAT           0x4004800c    0x4  Data  Wk  main.o [1]
+_A_TMR16B0CTCR          0x4000c070    0x4  Data  Wk  main.o [1]
+_A_TMR16B0IR            0x4000c000    0x4  Data  Wk  main.o [1]
+_A_TMR16B0MCR           0x4000c014    0x4  Data  Wk  main.o [1]
+_A_TMR16B0TCR           0x4000c004    0x4  Data  Wk  main.o [1]
+_A_TMR32B0IR            0x40014000    0x4  Data  Wk  main.o [1]
+_A_U0FCR                0x40008008    0x4  Data  Wk  uart.o [1]
+_A_U0LSR                0x40008014    0x4  Data  Wk  uart.o [1]
+_A_USBCLKDIV            0x400480c8    0x4  Data  Wk  usb_hw.o [1]
+_A_USBCLKSEL            0x400480c0    0x4  Data  Wk  usb_hw.o [1]
+_A_USBCLKUEN            0x400480c4    0x4  Data  Wk  usb_hw.o [1]
+_A_USBCmdCode           0x40020010    0x4  Data  Wk  usb_hw.o [1]
+_A_USBCmdData           0x40020014    0x4  Data  Wk  usb_hw.o [1]
+_A_USBCtrl              0x40020028    0x4  Data  Wk  usb_hw.o [1]
+_A_USBDevFIQSel         0x4002002c    0x4  Data  Wk  usb_hw.o [1]
+_A_USBDevIntClr         0x40020008    0x4  Data  Wk  usb_hw.o [1]
+_A_USBDevIntEn          0x40020004    0x4  Data  Wk  usb_hw.o [1]
+_A_USBDevIntSt          0x40020000    0x4  Data  Wk  usb_hw.o [1]
+_A_USBPLLCLKSEL         0x40048048    0x4  Data  Wk  usb_hw.o [1]
+_A_USBPLLCLKUEN         0x4004804c    0x4  Data  Wk  usb_hw.o [1]
+_A_USBPLLCTRL           0x40048010    0x4  Data  Wk  usb_hw.o [1]
+_A_USBPLLSTAT           0x40048014    0x4  Data  Wk  usb_hw.o [1]
+_A_USBRxPLen            0x40020020    0x4  Data  Wk  usb_hw.o [1]
+_A_USBTxPLen            0x40020024    0x4  Data  Wk  usb_hw.o [1]
+__aeabi_assert          0x00002b8b   0x46  Code  Gb  xassert.o [3]
+__aeabi_memcpy          0x00002ac9         Code  Gb  ABImemcpy.o [4]
+__aeabi_memcpy4         0x00002ae3         Code  Gb  ABImemcpy.o [4]
+__aeabi_memcpy8         0x00002ae3         Code  Gb  ABImemcpy.o [4]
+__dwrite                0x00002e31   0x1e  Code  Gb  dwrite.o [5]
+__exit                  0x00002ffd   0x14  Code  Gb  exit.o [5]
+__iar_EmptyStepPoint    0x00002b89    0x2  Code  Gb  xassert.o [3]
+__iar_ReportAssert      0x00002a6b   0x52  Code  Gb  xreportassert.o [3]
+__iar_copy_init2        0x00002da5   0x24  Code  Gb  copy_init2.o [4]
+__iar_data_init2        0x00002e11   0x20  Code  Gb  data_init2.o [4]
+__iar_program_start     0x00002f19         Code  Gb  cmain.o [4]
+__iar_sh_stdout_swo     0x00002b39   0x50  Code  Gb  iarwstdswo.o [5]
+__iar_sh_write          0x00002dc9   0x22  Code  Gb  iarwrite.o [5]
+__iar_zero_init2        0x00002e6d   0x1a  Code  Gb  zero_init2.o [4]
+__low_level_init        0x00003105    0x4  Code  Gb  low_level_init.o [3]
+__vector_table          0x00000000         Data  Gb  cstartup_M.o [1]
+__vector_table_0x1c     0x0000001c         Data  Gb  cstartup_M.o [1]
+__write                 0x00003071   0x10  Code  Gb  write.o [5]
+_exit                   0x00003099         Code  Gb  cexit.o [4]
+_main                   0x00002f2b         Code  Gb  cmain.o [4]
+abort                   0x000030ed    0x8  Code  Gb  abort.o [3]
+exit                    0x000030f5    0x6  Code  Gb  exit.o [3]
+main                    0x00001edf  0x2dc  Code  Gb  main.o [1]
+memcpy                  0x00002f31   0x16  Code  Gb  cd_class.o [1]
+out                     0x00002a55   0x16  Code  Lc  xreportassert.o [3]
+pUart0RxFifo            0x10000a18    0x4  Data  Gb  uart.o [1]
+pUart0TxFifo            0x10000a1c    0x4  Data  Gb  uart.o [1]
+putchar                 0x00002d7d   0x28  Code  Gb  putchar.o [3]
+
+
+[1] = D:\PENKO_D\Penko_Projects_Olimex\ARM\LPC\LPC-P1343\Software\LPC-P1343_Examples\LPC-P1343_VirtualComPort_LEDs&Buttons\Flash Debug\Obj
+[2] = command line
+[3] = dl7M_tl_in.a
+[4] = rt7M_tl.a
+[5] = shb_l.a
+
+  11 102 bytes of readonly  code memory
+   1 518 bytes of readonly  data memory
+   2 611 bytes of readwrite data memory
+
+Errors: none
+Warnings: none
