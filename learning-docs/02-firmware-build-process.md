@@ -54,7 +54,7 @@ The rest of this chapter explains what these commands actually do and why.
 
 #### **main.c** - Your Application Code
 ```c
-void main(void) {
+int main(void) {
     init_devices();
     while(1) { }
 }
@@ -96,7 +96,7 @@ This file tells the **linker** where to place code and data in memory.
 ```
 Memory Layout for LPC1343:
 ┌─────────────────────────────┐ 0x00000000
-│  Interrupt Vector Table     │ (first 292 bytes)
+│  Interrupt Vector Table     │ (first 0x124 bytes = 292 bytes = 73 vectors × 4 bytes)
 ├─────────────────────────────┤ 0x00000124
 │                             │
 │  Flash Memory (ROM)         │ Your program code lives here
@@ -117,7 +117,7 @@ Memory Layout for LPC1343:
 
 **Key sections from LPC1343_Flash.icf:**
 ```
-ROM: 0x00000124 to 0x00007FFF  (~32 KB)  - Where your code lives
+ROM: 0x00000124 to 0x00007FFF  (~31.7 KB usable, 32 KB total)  - Where your code lives
 RAM: 0x10000000 to 0x10001FFF  (8 KB)    - Where variables live
 Stack: 0x800 bytes (2 KB)                - For function calls
 Heap: 0x400 bytes (1 KB)                 - For malloc() (if used)
@@ -242,14 +242,13 @@ Ready to flash to microcontroller!
 C Code:
     LED0_ON;
 
-Assembly equivalent:
+Assembly equivalent (ARM Thumb-2):
     LDR  R0, =GPIO3DATA   ; Load address of GPIO3DATA
     LDR  R1, [R0]         ; Read current value
     BIC  R1, R1, #0x01    ; Clear bit 0 (bit clear)
     STR  R1, [R0]         ; Write back
 
-Machine Code (hex):
-    48 05 68 01 F0 21 01 60 01
+; The actual machine code bytes depend on exact addresses and encoding
 ```
 
 **Output:** `.o` object files (machine code, but addresses not final)
@@ -652,8 +651,8 @@ After flashing, this is what's in the LPC1343's memory:
 ```
 Address      Content
 0x00000000:  [Vector Table]
-             - Stack pointer: 0x10002000
-             - Reset handler: 0x000001C5
+             - Stack pointer: 0x10002000 (top of RAM + 1, SP points to next free)
+             - Reset handler: 0x000001C5 (bit 0 set = Thumb mode)
              - Interrupt handlers...
 
 0x00000124:  [Your Code]

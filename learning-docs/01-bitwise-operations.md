@@ -550,7 +550,7 @@ uint8_t value = 0x05;  // 0000 0101
 uint8_t result = ~value;
 
 // Result = 1111 1010 = 0xFA (for 8-bit)
-// NOT: 0xFFFFFFA (for 32-bit - inverts all 32 bits!)
+// NOT: 0xFFFFFFFA (for 32-bit - inverts all 32 bits!)
 ```
 
 ### Common Use Cases
@@ -981,7 +981,7 @@ uint8_t count_set_bits_fast(uint8_t value) {
 </details>
 
 ### Problem 5: Reverse Bits
-Reverse the bit order in a byte. Example: `0xA5` (1010 0101) → `0xA5` (1010 0101)
+Reverse the bit order in a byte. Example: `0x85` (1000 0101) → `0xA1` (1010 0001)
 
 <details>
 <summary>Solution</summary>
@@ -1037,31 +1037,45 @@ value >> 1;            // Logical shift, fills with 0
 
 **Problem:**
 ```c
-uint32_t reg = 0x12345678;
-reg &= ~0xFF;  // Trying to clear lower byte
-// ~0xFF = 0xFFFFFF00 (32-bit), not 0x00 !
+uint8_t mask = 0xFF;
+uint32_t inverted = ~mask;  // mask promoted to int, then inverted
+// Result: 0xFFFFFF00, not 0x00!
+// This is usually what you want, but can surprise you
 ```
 
 **Solution:**
 ```c
-reg &= ~(0xFF);  // This works correctly
-// Or:
-reg &= 0xFFFFFF00;  // Be explicit
+// Be explicit about the width you expect
+uint32_t reg = 0x12345678;
+reg &= ~0xFF;           // Works: clears lower byte (0x12345600)
+reg &= (uint8_t)~0xFF;  // WRONG: ~0xFF becomes 0xFFFFFF00, cast truncates to 0x00
+                        // Result: reg becomes 0x00000000!
+
+// When in doubt, be explicit:
+reg &= 0xFFFFFF00;  // Clear lower byte - intent is obvious
 ```
 
 ### Pitfall 4: Bit Shift Overflow
 
 **Problem:**
 ```c
-uint8_t value = 1 << 8;  // Shifts out of 8-bit range!
-// Undefined behavior or wraps to 0
+uint8_t value = 1 << 8;  // 1 is an int, so 1 << 8 = 256
+// 256 truncated to uint8_t = 0 (not undefined, but surprising)
+
+int x = 1 << 31;  // Undefined behavior on 32-bit int!
+// Shifting into or past the sign bit of signed type is UB
 ```
 
 **Solution:**
 ```c
-// Be aware of variable size
-uint32_t value = 1UL << 31;  // OK for 32-bit
-// Use UL suffix for unsigned long
+// Use unsigned types and suffix for safety
+uint32_t value = 1U << 31;   // OK: unsigned shift
+uint32_t value = 1UL << 31;  // OK: unsigned long shift
+
+// Be aware: shift amount must be less than bit width
+uint8_t byte = 1;
+byte <<= 7;  // OK: shifts within 8 bits
+byte <<= 8;  // Shift amount >= width: undefined behavior!
 ```
 
 ### Tip 1: Use #define for Magic Numbers

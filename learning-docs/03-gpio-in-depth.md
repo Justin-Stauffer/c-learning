@@ -139,7 +139,7 @@ Voltage Levels for LPC1343 (3.3V logic):
 0.0V ─────────────────────── LOW (logic 0)
 ```
 
-**Important:** Never apply more than 3.3V to a GPIO pin! The LPC1343 is NOT 5V tolerant on most pins.
+**Important:** Never apply more than 3.3V to a GPIO pin! The LPC1343 has limited 5V tolerance—only specific pins (like P0.4, P0.5 for I2C) are 5V tolerant. Check the datasheet for your specific pin.
 
 ### Output Driver Types
 
@@ -889,7 +889,7 @@ void PIOINT0_IRQHandler(void) {
 // Main program
 // ============================================
 
-void main(void) {
+int main(void) {
     init_leds();
     init_button_interrupt();
 
@@ -923,7 +923,8 @@ void enable_gpio_interrupt(uint8_t port) {
     }
 }
 
-// Set interrupt priority (0 = highest, 3 = lowest for Cortex-M3)
+// Set interrupt priority (0 = highest priority)
+// LPC1343 implements 3 priority bits, so valid range is 0-7
 void set_gpio_priority(uint8_t port, uint8_t priority) {
     NVIC_SetPriority(port, priority);  // port matches IRQ number
 }
@@ -1090,7 +1091,7 @@ void debounce_timer_callback(void) {
     GPIO0IE |= BUTTON_PIN;  // Re-enable
 }
 
-void main(void) {
+int main(void) {
     // ...
     while (1) {
         if (button_flag) {
@@ -1203,7 +1204,7 @@ void PIOINT0_IRQHandler(void) {
     }
 }
 
-void main(void) {
+int main(void) {
     static uint8_t chase_pos = 0;
 
     init_leds();

@@ -38,7 +38,7 @@ void uart_init(void) {
     UARTCLKDIV = 1;              // UART clock = system clock
 
     U0LCR = 0x80;                // Enable divisor access
-    U0DLL = 39;                  // 72MHz / (16 * 115200) ≈ 39
+    U0DLL = 39;                  // 72MHz / (16 * 115200) = 39.06 ≈ 39 (~1.6% error)
     U0DLM = 0;
     U0LCR = 0x03;                // 8N1, disable divisor access
     U0FCR = 0x07;                // Enable and reset FIFOs
@@ -737,7 +737,7 @@ void uart_init(uint32_t baud_rate) {
 }
 
 // Usage:
-void main(void) {
+int main(void) {
     uart_init(115200);
     // UART ready to use
 }
@@ -840,7 +840,7 @@ void uart_write(const uint8_t *data, uint32_t len) {
 }
 
 // Usage:
-void main(void) {
+int main(void) {
     uart_init(115200);
 
     uart_puts("Hello, World!\r\n");
@@ -937,7 +937,7 @@ void uart_print_bin(uint8_t value) {
 }
 
 // Usage:
-void main(void) {
+int main(void) {
     uart_init(115200);
 
     uart_puts("Counter: ");
@@ -1051,7 +1051,7 @@ void uart_read(uint8_t *buffer, uint32_t len) {
 }
 
 // Usage:
-void main(void) {
+int main(void) {
     char input[64];
 
     uart_init(115200);
@@ -1160,7 +1160,7 @@ void UART_IRQHandler(void) {
     }
 }
 
-void main(void) {
+int main(void) {
     uart_init_interrupt(115200);
     __enable_irq();
 
@@ -1497,7 +1497,7 @@ void uart_print_unsigned(uint32_t value) {
 }
 
 // Usage:
-void main(void) {
+int main(void) {
     uart_init(115200);
 
     int count = 42;
@@ -1555,7 +1555,7 @@ int _isatty(int file) { (void)file; return 1; }
 // Usage:
 #include <stdio.h>
 
-void main(void) {
+int main(void) {
     uart_init(115200);
 
     // Now standard printf works!
@@ -1759,7 +1759,7 @@ void command_loop(void) {
     }
 }
 
-void main(void) {
+int main(void) {
     init_leds();
     uart_init(115200);
     __enable_irq();
@@ -1796,7 +1796,7 @@ void log_buffer(const char *tag, uint8_t *data, uint32_t len) {
 }
 
 // Usage:
-void main(void) {
+int main(void) {
     uart_init(115200);
 
     log_string("BOOT", "System starting");
@@ -1902,7 +1902,7 @@ uint8_t parse_gpgga(const char *sentence, GpsPosition *pos) {
     return 1;
 }
 
-void main(void) {
+int main(void) {
     GpsPosition gps;
 
     uart_init(9600);  // GPS typically at 9600 baud
@@ -2316,7 +2316,7 @@ void my_handler(const char *line) {
     uart_printf("Received: %s\r\n", line);
 }
 
-void main(void) {
+int main(void) {
     uart_init(115200);
     line_protocol_loop(my_handler);
 }
@@ -2477,13 +2477,13 @@ NVIC_EnableIRQ(UART_IRQn);
 
 ### Baud Rate Quick Reference (72 MHz)
 
-| Baud | DLL | DLM | Error |
-|------|-----|-----|-------|
-| 9600 | 0x1E | 0x01 | 0.16% |
-| 19200 | 0x0F | 0x01 | 0.16% |
-| 38400 | 0x78 | 0x00 | 0.16% |
-| 57600 | 0x50 | 0x00 | 0.16% |
-| 115200 | 0x27 | 0x00 | 1.36% |
+| Baud | DLL | DLM | Divisor | Error |
+|------|-----|-----|---------|-------|
+| 9600 | 0xD5 | 0x01 | 469 | 0.08% |
+| 19200 | 0xEA | 0x00 | 234 | 0.16% |
+| 38400 | 0x75 | 0x00 | 117 | 0.16% |
+| 57600 | 0x4E | 0x00 | 78 | 0.16% |
+| 115200 | 0x27 | 0x00 | 39 | 1.60% |
 
 ---
 

@@ -116,7 +116,7 @@ You need a **toolchain** to convert your C code into something the chip can run.
 - Excellent optimization
 - Expensive license (free size-limited version available)
 
-This guide assumes **GCC ARM**. See [BUILD_INSTRUCTIONS_GCC.md](BUILD_INSTRUCTIONS_GCC.md) for IAR-specific notes.
+This guide assumes **GCC ARM**. See [BUILD_INSTRUCTIONS_GCC.md](BUILD_INSTRUCTIONS_GCC.md) for detailed GCC setup and build instructions.
 
 ---
 

@@ -244,7 +244,7 @@ void init_devices(void) {
 }
 
 // 5. Main function
-void main(void) {
+int main(void) {
     init_devices();
     while(1) {
         // Infinite loop (embedded systems never "exit")
@@ -314,7 +314,7 @@ In a microcontroller, an interrupt is a signal that makes the CPU temporarily st
 #### Polling (the inefficient way)
 
 ```c
-void main(void) {
+int main(void) {
     init_devices();
     unsigned long counter = 0;
 
@@ -337,7 +337,7 @@ void main(void) {
 #### Interrupt-Driven (the smart way)
 
 ```c
-void main(void) {
+int main(void) {
     init_devices();
     while(1) {
         // CPU can sleep or do other work
@@ -403,7 +403,7 @@ An **oscillator** is a circuit that generates a clock signal. The LPC1343 has tw
 #### 1. Internal RC Oscillator (IRC)
 - Built into the chip
 - 12 MHz
-- ±1% accuracy (not super precise)
+- ±1% to ±1.5% accuracy depending on temperature (not super precise)
 - Available immediately on power-up
 - No external components needed
 
@@ -460,15 +460,15 @@ The PLL has two key parameters:
 Step 1: Input
 12 MHz from crystal
     ↓
-Step 2: PLL Internal (CCO)
-12 MHz × 16 = 192 MHz (very fast, internal only)
+Step 2: PLL Multiplier (MSEL)
+12 MHz × 6 (MSEL+1) = 72 MHz output frequency
     ↓
-Step 3: Post-divider
-192 MHz ÷ 2 (PSEL) = 96 MHz
-Actually, code uses different math, but concept is same
+Step 3: PLL Internal (CCO)
+The CCO runs at: Fclkout × 2 × P (where P = 2^PSEL)
+72 MHz × 2 × 2 = 288 MHz (must be 156-320 MHz range)
     ↓
 Step 4: System Clock Divider
-Can divide again if needed (this code uses ÷1, main.c:154)
+Can divide again if needed (this code uses ÷1)
     ↓
 Final: 72 MHz to CPU and peripherals
 ```
@@ -514,13 +514,11 @@ MSEL = (MSEL - 1) = 5  // Hardware adds 1 back
 
 // PSEL calculation (main.c:86-90)
 // PLL needs internal CCO between 156-320 MHz
-// PSEL determines the divider to get there
-PSEL = 96000000 / PLL_Fclkout
-PSEL = 96000000 / 72000000 = 1.33...
-// So PSEL = 01 (meaning divide by 2)
+// CCO frequency = Fclkout × 2 × P (where P = 2^PSEL)
+// PSEL determines P: PSEL=0→P=1, PSEL=1→P=2, PSEL=2→P=4, PSEL=3→P=8
 
-// Internal CCO will be: 72 MHz × 2 = 144 MHz
-// (Actually more complex, but this is the idea)
+// For 72 MHz output with PSEL=1 (P=2):
+// CCO = 72 MHz × 2 × 2 = 288 MHz ✓ (within 156-320 MHz range)
 ```
 
 ### Step 4: Enable PLL and Wait for Lock (main.c:98-100)

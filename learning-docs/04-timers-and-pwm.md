@@ -40,7 +40,7 @@ void timer_init_1ms(void) {
     TMR32B0TCR = 0x02;           // Reset timer
     TMR32B0TCR = 0x00;
 
-    TMR32B0PR = 71;              // Prescaler: 72MHz/72 = 1MHz
+    TMR32B0PR = 71;              // Prescaler: 72MHz/(71+1) = 1MHz
     TMR32B0MR0 = 999;            // Match at 1000 counts = 1ms
     TMR32B0MCR = 0x03;           // Interrupt + reset on match
 
@@ -566,7 +566,7 @@ void delay_ms(uint32_t ms) {
 }
 
 // Usage:
-void main(void) {
+int main(void) {
     delay_init();
     __enable_irq();
 
@@ -603,7 +603,7 @@ uint8_t timeout_elapsed(uint32_t start_time, uint32_t timeout_ms) {
 }
 
 // Usage example: Non-blocking LED blink
-void main(void) {
+int main(void) {
     uint32_t last_toggle = 0;
 
     delay_init();
@@ -707,7 +707,7 @@ void periodic_timer_init(uint32_t frequency_hz) {
     TMR32B0TCR = 0x01;
 }
 
-void main(void) {
+int main(void) {
     periodic_timer_init(1000);  // 1 kHz = 1 ms period
     __enable_irq();
 
@@ -773,7 +773,7 @@ void sw_timer_stop(uint8_t id) {
 void led0_toggle(void) { LED0_TOGGLE(); }
 void led1_toggle(void) { LED1_TOGGLE(); }
 
-void main(void) {
+int main(void) {
     periodic_timer_init(1000);  // 1 ms tick
 
     sw_timer_start(0, 500, led0_toggle);   // LED0 every 500 ms
@@ -959,7 +959,7 @@ void pwm_set_duty(uint8_t duty_cycle) {
 }
 
 // Usage:
-void main(void) {
+int main(void) {
     pwm_init(1000, 50);  // 1 kHz, 50% duty cycle
 
     while (1) {
@@ -1022,7 +1022,7 @@ void pwm_set_rgb(uint8_t red, uint8_t green, uint8_t blue) {
 }
 
 // Usage:
-void main(void) {
+int main(void) {
     pwm_rgb_init(1000);
 
     while (1) {
@@ -1096,7 +1096,7 @@ void servo_set_pulse_us(uint16_t pulse_us) {
 }
 
 // Usage:
-void main(void) {
+int main(void) {
     servo_init();
 
     while (1) {
@@ -1284,7 +1284,7 @@ void PIOINT0_IRQHandler(void) {
     }
 }
 
-void main(void) {
+int main(void) {
     init_button_interrupt();  // From GPIO guide
     pwm_init(1000, brightness);
 
@@ -1499,7 +1499,7 @@ uint32_t get_distance_cm(void) {
     return 0;  // Timeout
 }
 
-void main(void) {
+int main(void) {
     ultrasonic_init();
     __enable_irq();
 
@@ -1578,7 +1578,7 @@ void play_melody(const Note *notes) {
     }
 }
 
-void main(void) {
+int main(void) {
     pwm_init(440, 50);  // Initialize PWM
 
     while (1) {
@@ -1642,14 +1642,14 @@ PWM CALCULATIONS
 
 PWM Frequency = System Clock / [(Prescaler + 1) × (Period Register + 1)]
 
-PWM Duty Cycle = (Duty Register + 1) / (Period Register + 1) × 100%
+PWM Duty Cycle = Duty Register / (Period Register + 1) × 100%
 
 Example: 20 kHz PWM at 72 MHz, no prescaler
   Period = 72,000,000 / 20,000 - 1 = 3599
 
-  For 25% duty: Duty Register = (3600 × 0.25) - 1 = 899
-  For 50% duty: Duty Register = (3600 × 0.50) - 1 = 1799
-  For 75% duty: Duty Register = (3600 × 0.75) - 1 = 2699
+  For 25% duty: Duty Register = 3600 × 0.25 = 900
+  For 50% duty: Duty Register = 3600 × 0.50 = 1800
+  For 75% duty: Duty Register = 3600 × 0.75 = 2700
 
 ═══════════════════════════════════════════════════════════════
 PWM RESOLUTION CALCULATIONS
@@ -1796,7 +1796,7 @@ uint8_t check_button(void) {
     return BUTTON_PRESSED();
 }
 
-void main(void) {
+int main(void) {
     if (wait_with_timeout(check_button, 5000)) {
         // Button pressed within 5 seconds
     } else {
@@ -1950,7 +1950,7 @@ Match Time = (MR + 1) / Timer_Clock
 
 Interrupt Frequency = Timer_Clock / (MR + 1)
 
-PWM Duty % = (Duty_MR + 1) / (Period_MR + 1) × 100
+PWM Duty % = Duty_MR / (Period_MR + 1) × 100
 ```
 
 ### Code Snippets
