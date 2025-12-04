@@ -45,10 +45,10 @@ make all
 ```
 
 This creates:
-- `build/lpc1343_blink.elf` - Executable with debug symbols
-- `build/lpc1343_blink.hex` - Intel HEX format (for programming)
-- `build/lpc1343_blink.bin` - Raw binary format (for programming)
-- `build/lpc1343_blink.map` - Memory map
+- `build/lpc1343_getting_started.elf` - Executable with debug symbols
+- `build/lpc1343_getting_started.hex` - Intel HEX format (for programming)
+- `build/lpc1343_getting_started.bin` - Raw binary format (for programming)
+- `build/lpc1343_getting_started.map` - Memory map
 
 ### Clean Build Artifacts
 ```bash
@@ -68,7 +68,7 @@ make size
 Output example:
 ```
    text    data     bss     dec     hex filename
-   4532     108    2048    6688    1a20 build/lpc1343_blink.elf
+   4532     108    2048    6688    1a20 build/lpc1343_getting_started.elf
 ```
 - **text**: Code + constants (goes in Flash)
 - **data**: Initialized variables (goes in Flash, copied to RAM)
@@ -78,7 +78,7 @@ Output example:
 ```bash
 make disasm
 ```
-Creates `build/lpc1343_blink.lst` with assembly code
+Creates `build/lpc1343_getting_started.lst` with assembly code
 
 ## Building from VSCode
 
@@ -102,7 +102,7 @@ Press `Ctrl+Shift+P`, type "Run Task", then select:
 1. Hold the bootloader button while plugging in USB
 2. A drive named `CRP DISABLD` appears
 3. Delete `firmware.bin` on the drive
-4. Copy `build/lpc1343_blink.bin` to the drive
+4. Copy `build/lpc1343_getting_started.bin` to the drive
 5. Eject and reset
 
 ### Method 2: Serial Bootloader (UART)

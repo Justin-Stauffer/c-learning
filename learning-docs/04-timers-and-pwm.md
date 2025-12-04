@@ -26,6 +26,7 @@ Here's the minimal code to generate a 1ms periodic interrupt:
 #define TMR32B0MR0    (*((volatile unsigned int *)0x40014018))
 #define TMR32B0MCR    (*((volatile unsigned int *)0x40014014))
 #define TMR32B0IR     (*((volatile unsigned int *)0x40014000))
+#define NVIC_ISER     (*((volatile unsigned int *)0xE000E100))
 
 volatile uint32_t ms_ticks = 0;
 
@@ -44,7 +45,7 @@ void timer_init_1ms(void) {
     TMR32B0MR0 = 999;            // Match at 1000 counts = 1ms
     TMR32B0MCR = 0x03;           // Interrupt + reset on match
 
-    NVIC_EnableIRQ(18);          // Enable CT32B0 interrupt
+    NVIC_ISER = (1 << 18);       // Enable CT32B0 interrupt in NVIC
     TMR32B0TCR = 0x01;           // Start timer
 }
 
@@ -488,7 +489,8 @@ void timer_init(void) {
     TMR32B0IR = 0x1F;  // Clear all flags
 
     // Step 7: Enable timer interrupt in NVIC
-    NVIC_EnableIRQ(CT32B0_IRQn);
+    // CT32B0 is IRQ 18
+    NVIC_ISER = (1 << 18);
 
     // Step 8: Start the timer
     TMR32B0TCR = 0x01;  // Enable counting
@@ -552,7 +554,7 @@ void delay_init(void) {
 
     // Clear pending and enable interrupt
     TMR32B0IR = 0x1F;
-    NVIC_EnableIRQ(CT32B0_IRQn);
+    NVIC_ISER = (1 << 18);  // CT32B0 IRQ
 
     // Start timer
     TMR32B0TCR = 0x01;
@@ -703,7 +705,7 @@ void periodic_timer_init(uint32_t frequency_hz) {
     TMR32B0MCR = (1 << 0) | (1 << 1);  // Interrupt + Reset
     TMR32B0IR = 0x1F;
 
-    NVIC_EnableIRQ(CT32B0_IRQn);
+    NVIC_ISER = (1 << 18);  // CT32B0 IRQ
     TMR32B0TCR = 0x01;
 }
 
@@ -1206,7 +1208,7 @@ void capture_init(void) {
     TMR32B0CCR = (1 << 0) | (1 << 2);  // CAP0RE + CAP0I
 
     TMR32B0IR = 0x1F;
-    NVIC_EnableIRQ(CT32B0_IRQn);
+    NVIC_ISER = (1 << 18);  // CT32B0 IRQ
 
     TMR32B0TCR = 0x01;
 }
@@ -1712,7 +1714,8 @@ void timer_init_template(void) {
     TIMERx_IR = 0x1F;
 
     // 7. Enable interrupt in NVIC (if using interrupts)
-    NVIC_EnableIRQ(TIMERx_IRQn);
+    // Use appropriate IRQ number: CT16B0=16, CT16B1=17, CT32B0=18, CT32B1=19
+    NVIC_ISER = (1 << TIMERx_IRQ_NUMBER);
 
     // 8. Start timer
     TIMERx_TCR = 0x01;
@@ -1841,8 +1844,8 @@ int main(void) {
 
 2. Interrupt not enabled in NVIC
    ```c
-   // Fix: Enable in NVIC
-   NVIC_EnableIRQ(CT32B0_IRQn);
+   // Fix: Enable in NVIC (CT32B0 is IRQ 18)
+   NVIC_ISER = (1 << 18);
    ```
 
 3. Global interrupts disabled

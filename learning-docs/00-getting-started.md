@@ -185,12 +185,16 @@ Any text editor works, but **VS Code** is recommended:
 
 ### Step 4: Get the Example Code
 
-If you have the LPC-P1343 examples:
+Navigate to the Getting-Started example:
 ```bash
-cd /path/to/LPC-P1343_Examples/LPC-P1343_LEDs_Running_Light
+cd /path/to/LPC-P1343_Examples/Getting-Started
 ```
 
-Or create a new project folder with the files from this learning library.
+This folder contains all the files you need:
+- `main.c` - The LED blink program
+- `startup_lpc1343_gcc.s` - GCC startup code
+- `lpc1343_flash.ld` - Linker script
+- `Makefile` - Build automation
 
 ---
 
@@ -269,7 +273,7 @@ make
 You should see output ending with:
 ```
    text    data     bss     dec     hex filename
-   1234      12      32    1278     4fe build/lpc1343_blink.elf
+   1234      12      32    1278     4fe build/lpc1343_getting_started.elf
 ```
 
 This means:
@@ -285,13 +289,13 @@ This means:
 2. Plug in USB cable (while holding button)
 3. A drive called "CRP DISABLD" appears
 4. Delete any existing file on the drive
-5. Copy `build/lpc1343_blink.bin` to the drive
+5. Copy `build/lpc1343_getting_started.bin` to the drive
 6. Safely eject the drive
 7. Press reset button
 
-*Method 2: Using a debug probe*
+*Method 2: Using ST-Link debug probe*
 ```bash
-make flash-openocd
+make flash
 ```
 
 **See it work:**
@@ -317,12 +321,12 @@ Let's trace through what happened from source code to blinking LED:
 ┌──────────────────────────────────────────────────────────────┐
 │  3. Linker combined all object files                         │
 │     Used: linker script to assign memory addresses           │
-│     Created: lpc1343_blink.elf                               │
+│     Created: lpc1343_getting_started.elf                               │
 └──────────────────────────┬───────────────────────────────────┘
                            ↓
 ┌──────────────────────────────────────────────────────────────┐
 │  4. Objcopy extracted raw binary                             │
-│     Created: lpc1343_blink.bin                               │
+│     Created: lpc1343_getting_started.bin                               │
 └──────────────────────────┬───────────────────────────────────┘
                            ↓
 ┌──────────────────────────────────────────────────────────────┐

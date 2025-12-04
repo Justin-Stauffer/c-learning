@@ -25,23 +25,23 @@ make
 
 # See what got created
 ls build/
-# lpc1343_blink.elf  - Executable with debug info
-# lpc1343_blink.hex  - Intel HEX for programming
-# lpc1343_blink.bin  - Raw binary for programming
-# lpc1343_blink.map  - Memory layout
+# lpc1343_getting_started.elf  - Executable with debug info
+# lpc1343_getting_started.hex  - Intel HEX for programming
+# lpc1343_getting_started.bin  - Raw binary for programming
+# lpc1343_getting_started.map  - Memory layout
 
 # Check memory usage
 make size
 #    text    data     bss     dec     hex filename
-#    4532     108    2048    6688    1a20 build/lpc1343_blink.elf
+#    4532     108    2048    6688    1a20 build/lpc1343_getting_started.elf
 # text = code (Flash), data = initialized vars, bss = uninitialized vars
 
 # Clean and rebuild
 make clean && make
 
 # Flash to hardware
-make flash-openocd    # via debug probe
-# OR copy build/lpc1343_blink.bin to the CRP DISABLD drive
+make flash    # via debug probe (ST-Link)
+# OR copy build/lpc1343_getting_started.bin to the CRP DISABLD drive
 ```
 
 The rest of this chapter explains what these commands actually do and why.
@@ -200,16 +200,16 @@ main.o (object file)
 Machine code, not yet linked
 
 Step 3: ASSEMBLY (for startup code)
-cstartup_M.s
+startup.s (startup_lpc1343_gcc.s or cstartup_M.s)
         ↓
     [Assembler]
         ↓
-cstartup_M.o (object file)
+startup.o (object file)
 
 Step 4: LINKING
-main.o + cstartup_M.o + libraries
+main.o + startup.o + libraries
         ↓
-    [Linker] (uses LPC1343_Flash.icf)
+    [Linker] (uses linker script: .ld or .icf)
         ↓
 program.elf (executable)
 Complete program with addresses resolved
@@ -374,17 +374,17 @@ make all
 This automatically:
 - Compiles `main.c` → `main.o`
 - Assembles `startup_lpc1343_gcc.s` → `startup_lpc1343_gcc.o`
-- Links all objects → `lpc1343_blink.elf`
-- Converts to HEX → `lpc1343_blink.hex`
-- Converts to BIN → `lpc1343_blink.bin`
+- Links all objects → `lpc1343_getting_started.elf`
+- Converts to HEX → `lpc1343_getting_started.hex`
+- Converts to BIN → `lpc1343_getting_started.bin`
 
 **2. Build Output Files Created**
 ```
 build/ folder:
-├── lpc1343_blink.elf     (executable with debug info)
-├── lpc1343_blink.hex     (Intel HEX for programming)
-├── lpc1343_blink.bin     (raw binary for programming)
-├── lpc1343_blink.map     (memory map)
+├── lpc1343_getting_started.elf     (executable with debug info)
+├── lpc1343_getting_started.hex     (Intel HEX for programming)
+├── lpc1343_getting_started.bin     (raw binary for programming)
+├── lpc1343_getting_started.map     (memory map)
 ├── main.o                (compiled main.c)
 ├── startup_lpc1343_gcc.o (compiled startup)
 └── *.d                   (dependency files)
@@ -399,7 +399,7 @@ Output:
 ```
 === Memory Usage ===
    text    data     bss     dec     hex filename
-   4532     108    2048    6688    1a20 build/lpc1343_blink.elf
+   4532     108    2048    6688    1a20 build/lpc1343_getting_started.elf
 
 text: 4532 bytes (Flash) - Your code + constants
 data:  108 bytes (Flash→RAM) - Initialized variables
@@ -497,19 +497,19 @@ The LPC-P1343 board likely has a debug connector (JTAG or SWD).
 
 **With GCC + OpenOCD:**
 ```bash
-make flash-openocd
+make flash
 ```
 
 Or manually:
 ```bash
-openocd -f interface/cmsis-dap.cfg -f target/lpc1343.cfg \
-    -c "program build/lpc1343_blink.bin verify reset exit 0x00000000"
+openocd -f interface/stlink.cfg -f target/lpc13xx.cfg \
+    -c "program build/lpc1343_getting_started.elf reset exit"
 ```
 
 Common OpenOCD interface configs:
+- `interface/stlink.cfg` - ST-Link (recommended, widely available)
 - `interface/cmsis-dap.cfg` - Generic CMSIS-DAP probe
 - `interface/jlink.cfg` - Segger J-Link
-- `interface/stlink.cfg` - ST-Link (with adapters)
 
 **How it works:**
 ```
@@ -535,7 +535,7 @@ The LPC1343 has a built-in USB bootloader. **Works with both IAR and GCC** - jus
    - Delete existing `firmware.bin` (if present)
    - Drag and drop your `.bin` file to the drive
      - IAR: `Debug/LPC-P1343_LEDs_Running_Light.bin`
-     - GCC: `build/lpc1343_blink.bin`
+     - GCC: `build/lpc1343_getting_started.bin`
    - Board automatically programs itself (LED may blink)
 
 3. **Reset:**
@@ -549,22 +549,17 @@ The LPC1343 has a built-in USB bootloader. **Works with both IAR and GCC** - jus
 
 Flash via UART using the `lpc21isp` tool. Requires UART connection to the board.
 
-**With GCC (using Makefile):**
-```bash
-make flash-serial
-```
-
-**Manual command:**
+**Command (requires lpc21isp installed):**
 ```bash
 # Syntax: lpc21isp -bin <file> <port> <baud> <crystal_khz>
-lpc21isp -bin build/lpc1343_blink.bin COM3 115200 12000
+lpc21isp -bin build/lpc1343_getting_started.bin COM3 115200 12000
 
 # Linux/Mac example:
-lpc21isp -bin build/lpc1343_blink.bin /dev/ttyUSB0 115200 12000
+lpc21isp -bin build/lpc1343_getting_started.bin /dev/ttyUSB0 115200 12000
 ```
 
 **Parameters:**
-- `build/lpc1343_blink.bin` - Your firmware binary
+- `build/lpc1343_getting_started.bin` - Your firmware binary
 - `COM3` (Windows) or `/dev/ttyUSB0` (Linux) - Serial port
 - `115200` - Baud rate
 - `12000` - Crystal frequency in KHz (12 MHz = 12000)
