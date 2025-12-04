@@ -1,6 +1,50 @@
-# From Source Code to Firmware: Build Process Explained
+# Chapter 2: From Source Code to Firmware
 
 A complete beginner's guide to understanding how your C code becomes firmware that runs on the LPC1343 microcontroller.
+
+---
+
+## Chapter Overview
+
+| | |
+|---|---|
+| **Prerequisites** | Chapter 0-1 (Getting Started, Bitwise Operations) |
+| **Time to Complete** | 1-2 hours |
+| **Hands-On Projects** | Build from command line, examine output files |
+| **You Will Learn** | How the toolchain transforms code into firmware |
+
+---
+
+## Quick Start: Build Commands You Need
+
+Here's how to build your project from the command line:
+
+```bash
+# Build everything
+make
+
+# See what got created
+ls build/
+# lpc1343_blink.elf  - Executable with debug info
+# lpc1343_blink.hex  - Intel HEX for programming
+# lpc1343_blink.bin  - Raw binary for programming
+# lpc1343_blink.map  - Memory layout
+
+# Check memory usage
+make size
+#    text    data     bss     dec     hex filename
+#    4532     108    2048    6688    1a20 build/lpc1343_blink.elf
+# text = code (Flash), data = initialized vars, bss = uninitialized vars
+
+# Clean and rebuild
+make clean && make
+
+# Flash to hardware
+make flash-openocd    # via debug probe
+# OR copy build/lpc1343_blink.bin to the CRP DISABLD drive
+```
+
+The rest of this chapter explains what these commands actually do and why.
 
 ---
 
@@ -852,4 +896,12 @@ You can always learn IAR later if your job requires it. The concepts (interrupts
 
 ---
 
-*Companion guide to the LPC-P1343 Interrupt and Clock examples*
+## What's Next?
+
+You now understand how your code becomes firmware. Time to start controlling hardware directly!
+
+**Next Chapter:** [Chapter 3: GPIO In-Depth](03-gpio-in-depth.md) - Learn to control pins, read buttons, and use GPIO interrupts.
+
+---
+
+*Chapter 2 of the LPC1343 Embedded C Programming Guide*

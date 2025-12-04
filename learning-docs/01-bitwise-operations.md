@@ -1,6 +1,51 @@
-# Bitwise Operations - Complete Guide for Embedded Programming
+# Chapter 1: Bitwise Operations
 
 A comprehensive beginner's guide to understanding bitwise operations and why they're essential in embedded systems.
+
+---
+
+## Chapter Overview
+
+| | |
+|---|---|
+| **Prerequisites** | Chapter 0 (Getting Started) |
+| **Time to Complete** | 2-3 hours |
+| **Hands-On Projects** | LED patterns, binary counter |
+| **You Will Learn** | How to manipulate individual bits in registers |
+
+---
+
+## Quick Start: The Four Patterns You'll Use 90% of the Time
+
+Before diving deep, here are the four bit operations you'll use constantly:
+
+```c
+// 1. SET a bit (turn something ON)
+register |= (1 << bit_number);
+// Example: Turn on bit 5
+GPIO3DATA |= (1 << 5);
+
+// 2. CLEAR a bit (turn something OFF)
+register &= ~(1 << bit_number);
+// Example: Turn off bit 5
+GPIO3DATA &= ~(1 << 5);
+
+// 3. TOGGLE a bit (flip its state)
+register ^= (1 << bit_number);
+// Example: Toggle bit 5
+GPIO3DATA ^= (1 << 5);
+
+// 4. CHECK if a bit is set
+if (register & (1 << bit_number)) {
+    // bit is 1
+}
+// Example: Check bit 5
+if (GPIO3DATA & (1 << 5)) {
+    // Pin 5 is HIGH
+}
+```
+
+**That's it.** These four patterns will cover almost every situation. The rest of this chapter explains *why* they work and shows more advanced uses.
 
 ---
 
@@ -1104,4 +1149,12 @@ Try these exercises with your LPC1343:
 
 ---
 
-*Companion guide to the LPC-P1343 examples*
+## What's Next?
+
+You now have the foundational skill for all embedded programming. Every chapter from here on uses bitwise operations to control hardware.
+
+**Next Chapter:** [Chapter 2: Build Process](02-firmware-build-process.md) - Understand how your code becomes firmware that runs on the chip.
+
+---
+
+*Chapter 1 of the LPC1343 Embedded C Programming Guide*

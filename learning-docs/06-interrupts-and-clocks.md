@@ -1,6 +1,72 @@
-# Embedded Systems: Interrupts and Clocks Explained
+# Chapter 6: Interrupts and Clocks
 
-A beginner's guide to interrupt-driven programming and clock/PLL configuration for the LPC1343 microcontroller.
+A comprehensive guide to interrupt-driven programming and clock/PLL configuration for efficient embedded systems.
+
+---
+
+## Chapter Overview
+
+| Section | What You'll Learn | Difficulty |
+|---------|-------------------|------------|
+| Part 0 | Essential fundamentals | ⭐ Beginner |
+| Part 1 | How clocks work | ⭐⭐ Intermediate |
+| Part 2 | PLL configuration | ⭐⭐ Intermediate |
+| Part 3 | Interrupt basics | ⭐⭐ Intermediate |
+| Part 4 | NVIC deep dive | ⭐⭐⭐ Advanced |
+| Part 5 | Complete examples | ⭐⭐⭐ Advanced |
+
+**Prerequisites:** [Chapter 4: Timers and PWM](04-timers-and-pwm.md) recommended
+
+---
+
+## Quick Start: Your First Interrupt
+
+Before diving deep, let's see a working interrupt-driven LED blink:
+
+```c
+#include "LPC13xx.h"
+
+volatile uint32_t ms_ticks = 0;
+
+// Interrupt handler - called every 1ms
+void SysTick_Handler(void) {
+    ms_ticks++;
+}
+
+void delay_ms(uint32_t ms) {
+    uint32_t start = ms_ticks;
+    while ((ms_ticks - start) < ms);
+}
+
+int main(void) {
+    // Configure SysTick for 1ms interrupts (at 72MHz)
+    SysTick->LOAD = 72000 - 1;  // Count to 72000 (72MHz/72000 = 1kHz = 1ms)
+    SysTick->VAL = 0;            // Clear current value
+    SysTick->CTRL = 0x07;        // Enable, use CPU clock, enable interrupt
+
+    // Configure LED (P3.0)
+    LPC_GPIO3->DIR |= (1 << 0);  // Output
+
+    while (1) {
+        LPC_GPIO3->DATA &= ~(1 << 0);  // LED ON
+        delay_ms(500);
+        LPC_GPIO3->DATA |= (1 << 0);   // LED OFF
+        delay_ms(500);
+    }
+}
+```
+
+**What makes this different from polling?**
+- The CPU isn't stuck in a loop counting
+- `SysTick_Handler` is called automatically every 1ms
+- Your main code can do other work between delays
+- More accurate timing (hardware-driven)
+
+**Key concepts you'll learn:**
+1. **Clock sources** - Where the timing comes from
+2. **PLL** - How to multiply the clock for higher speeds
+3. **Interrupts** - How hardware notifies your code
+4. **NVIC** - Managing multiple interrupt sources
 
 ---
 
@@ -601,4 +667,30 @@ To deepen your understanding:
 
 ---
 
-*Generated from analysis of main.c in LPC-P1343_Blinking_Led_Interrupt example*
+## What's Next?
+
+Congratulations! You've completed the core curriculum of the Embedded C Learning Series!
+
+**You now understand:**
+- Bitwise operations for register manipulation
+- The firmware build process
+- GPIO for input/output control
+- Timers and PWM for time-based operations
+- UART for serial communication
+- Interrupts and clock configuration
+
+**Continue your journey:**
+- [Return to Index](00-index.md) - Review the complete learning path
+- [Chapter 0: Getting Started](00-getting-started.md) - Quick reference
+- Build your own projects combining these concepts!
+
+**Suggested projects to solidify your learning:**
+1. **Reaction timer** - Measure button press reaction time with UART output
+2. **PWM LED with serial control** - Adjust brightness via terminal commands
+3. **Multi-channel data logger** - ADC sampling with timestamped UART output
+4. **State machine** - Interrupt-driven mode switching
+
+---
+
+*Chapter 6 of the Embedded C Learning Series*
+*Part of the LPC1343 Learning Library*
