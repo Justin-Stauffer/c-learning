@@ -121,8 +121,8 @@ void init_button_interrupt(void) {
     GPIO0IC = BUTTON_PIN;
     GPIO0IE |= BUTTON_PIN;
 
-    /* Enable GPIO Port 0 interrupt in NVIC (IRQ 0) */
-    NVIC_ISER = (1 << 0);
+    /* Enable GPIO Port 0 interrupt in NVIC (PIO0 is IRQ 31) */
+    NVIC_ISER = (1 << 31);
 }
 
 /*******************************************************************************

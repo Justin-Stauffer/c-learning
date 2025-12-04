@@ -31,6 +31,10 @@ The guides are organized as a front-to-back learning curriculum. Each chapter bu
 | 4 | Timers and PWM | `04-timers-and-pwm.md` | ✅ Complete |
 | 5 | UART Serial Communication | `05-uart-serial-communication.md` | ✅ Complete |
 | 6 | Interrupts and Clocks | `06-interrupts-and-clocks.md` | ✅ Complete |
+| 7 | Analog-to-Digital Converter | `07-adc-analog-to-digital.md` | ✅ Complete |
+| 8 | I2C Communication | `08-i2c-communication.md` | ✅ Complete |
+| 9 | SPI Communication | `09-spi-communication.md` | ✅ Complete |
+| 10 | Power Management | `10-power-management.md` | ✅ Complete |
 
 **Master Index:** `00-index.md` - Start here for navigation and quick reference
 
@@ -78,15 +82,6 @@ The guides are organized as a front-to-back learning curriculum. Each chapter bu
 
 ## 📋 Planned Guides (Future Chapters)
 
-### Medium Priority (Next to implement)
-
-| Ch | Topic | Estimated Size |
-|----|-------|----------------|
-| 7 | Analog-to-Digital Converter (ADC) | 14-18 KB |
-| 8 | I2C Communication | 16-20 KB |
-| 9 | SPI Communication | 15-18 KB |
-| 10 | Power Management | 12-16 KB |
-
 ### Lower Priority (Advanced Topics)
 
 | Ch | Topic | Estimated Size |
@@ -96,6 +91,17 @@ The guides are organized as a front-to-back learning curriculum. Each chapter bu
 | 13 | RTOS Basics | 18-24 KB |
 | 14 | Debugging Techniques | 16-20 KB |
 | 15 | Memory Management | 14-18 KB |
+
+---
+
+## 📚 Appendices (Supplementary Guides)
+
+Located in `appendix/` folder:
+
+| Appendix | Title | File | Status |
+|----------|-------|------|--------|
+| A | Hardware Setup (ST-Link & UART) | `appendix/A-hardware-setup-stlink-uart.md` | ✅ Complete |
+| B | Breadboard Basics | `appendix/B-breadboard-basics.md` | ✅ Complete |
 
 ---
 
@@ -110,7 +116,6 @@ The guides are organized as a front-to-back learning curriculum. Each chapter bu
 - ✅ GCC startup code with comments
 
 ### Planned:
-- [ ] Hardware Setup Guide (wiring, breadboard layouts)
 - [ ] Toolchain Installation Guide (all platforms)
 - [ ] Troubleshooting Common Errors
 - [ ] Project Template Structure
@@ -119,7 +124,7 @@ The guides are organized as a front-to-back learning curriculum. Each chapter bu
 
 ## 📊 Statistics
 
-**Core Curriculum:** 7/7 chapters complete (100%)
+**Core Curriculum:** 11/11 chapters complete (100%)
 **Master Index:** Complete
 **Planned Extensions:** 9 additional topics
 **Total Documentation Size:** ~205 KB
@@ -160,6 +165,6 @@ The guides are organized as a front-to-back learning curriculum. Each chapter bu
 
 ---
 
-**Last Updated:** 2025-12-03 (Restructured as book-style curriculum)
+**Last Updated:** 2025-12-04 (Added Chapters 7-10: ADC, I2C, SPI, Power Management)
 **Maintained By:** Claude Code Sessions
 **For:** Embedded C Learning Project (LPC1343)

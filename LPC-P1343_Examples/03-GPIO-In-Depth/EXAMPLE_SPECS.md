@@ -157,7 +157,7 @@ GPIO0IBE &= ~BUTTON_PIN;  // Single edge
 GPIO0IEV &= ~BUTTON_PIN;  // Falling edge
 GPIO0IC = BUTTON_PIN;     // Clear pending
 GPIO0IE |= BUTTON_PIN;    // Enable
-NVIC_ISER = (1 << 0);     // Enable PIOINT0 in NVIC (IRQ 0)
+NVIC_ISER = (1 << 31);    // Enable PIO0 in NVIC (IRQ 31)
 ```
 
 ---

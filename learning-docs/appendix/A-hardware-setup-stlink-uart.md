@@ -1,4 +1,4 @@
-# Chapter 7: Hardware Setup Guide
+# Appendix A: Hardware Setup Guide
 
 ## ST-Link Debugger and DSD TECH SH-U09C5 UART Adapter with LPC-P1343
 
@@ -1352,9 +1352,9 @@ With your debugging and serial setup working, you can:
 
 ---
 
-**Return to:** [Index](00-index.md) | [Chapter 5: UART Communication](05-uart-serial-communication.md) | [Chapter 6: Interrupts and Clocks](06-interrupts-and-clocks.md)
+**Return to:** [Index](../00-index.md) | [Chapter 5: UART Communication](../05-uart-serial-communication.md) | [Chapter 6: Interrupts and Clocks](../06-interrupts-and-clocks.md)
 
 ---
 
-*Chapter 7 of the Embedded C Learning Series*
+*Appendix A of the Embedded C Learning Series*
 *Hardware Setup Guide for LPC-P1343 with ST-Link and DSD TECH UART Adapter*

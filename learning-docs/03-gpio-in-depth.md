@@ -866,8 +866,8 @@ void init_button_interrupt(void) {
     GPIO0IE |= BUTTON_PIN;
 
     // Enable GPIO Port 0 interrupt in NVIC
-    // PIOINT0_IRQn = interrupt number 0 for Port 0
-    NVIC_EnableIRQ(PIOINT0_IRQn);
+    // PIO0 IRQ is interrupt 31 (see IRQ table below)
+    NVIC_ISER = (1 << 31);
 }
 
 // ============================================
@@ -907,26 +907,23 @@ int main(void) {
 ### NVIC Configuration for GPIO
 
 ```c
+// NVIC Interrupt Set Enable Register
+#define NVIC_ISER (*((volatile uint32_t *)0xE000E100))
+
 // GPIO interrupt numbers in LPC1343
-// PIOINT0_IRQn = 0  (GPIO Port 0)
-// PIOINT1_IRQn = 1  (GPIO Port 1)
-// PIOINT2_IRQn = 2  (GPIO Port 2)
-// PIOINT3_IRQn = 3  (GPIO Port 3)
+// PIO3_IRQn = 27  (GPIO Port 3)
+// PIO2_IRQn = 28  (GPIO Port 2)
+// PIO1_IRQn = 29  (GPIO Port 1)
+// PIO0_IRQn = 31  (GPIO Port 0)
 
 // Enable interrupt in NVIC
 void enable_gpio_interrupt(uint8_t port) {
     switch (port) {
-        case 0: NVIC_EnableIRQ(PIOINT0_IRQn); break;
-        case 1: NVIC_EnableIRQ(PIOINT1_IRQn); break;
-        case 2: NVIC_EnableIRQ(PIOINT2_IRQn); break;
-        case 3: NVIC_EnableIRQ(PIOINT3_IRQn); break;
+        case 0: NVIC_ISER = (1 << 31); break;  // PIO0
+        case 1: NVIC_ISER = (1 << 29); break;  // PIO1
+        case 2: NVIC_ISER = (1 << 28); break;  // PIO2
+        case 3: NVIC_ISER = (1 << 27); break;  // PIO3
     }
-}
-
-// Set interrupt priority (0 = highest priority)
-// LPC1343 implements 3 priority bits, so valid range is 0-7
-void set_gpio_priority(uint8_t port, uint8_t priority) {
-    NVIC_SetPriority(port, priority);  // port matches IRQ number
 }
 ```
 
@@ -1506,8 +1503,8 @@ uint8_t val = GPIO_READ_BIT(GPIO0DATA, 1);  // Read bit 1
 
 2. Interrupt not enabled in NVIC
    ```c
-   // Fix: Enable in NVIC
-   NVIC_EnableIRQ(PIOINT0_IRQn);
+   // Fix: Enable in NVIC (PIO0 is IRQ 31)
+   NVIC_ISER = (1 << 31);
    ```
 
 3. Global interrupts disabled
@@ -1558,6 +1555,23 @@ uint8_t val = GPIO_READ_BIT(GPIO0DATA, 1);  // Read bit 1
 | GPIOnMIS | 0x8018 | Masked interrupt status |
 | GPIOnIC | 0x801C | Interrupt clear |
 
+### NVIC Interrupt Numbers for GPIO
+
+```c
+#define NVIC_ISER (*((volatile uint32_t *)0xE000E100))
+
+// GPIO Port IRQ Numbers
+// PIO3_IRQn = 27
+// PIO2_IRQn = 28
+// PIO1_IRQn = 29
+// PIO0_IRQn = 31
+
+NVIC_ISER = (1 << 31);  // Enable PIO0 interrupt
+NVIC_ISER = (1 << 29);  // Enable PIO1 interrupt
+NVIC_ISER = (1 << 28);  // Enable PIO2 interrupt
+NVIC_ISER = (1 << 27);  // Enable PIO3 interrupt
+```
+
 ### IOCON Mode Settings
 
 | MODE [4:3] | Pull Resistor |
@@ -1587,7 +1601,7 @@ GPIO0IBE &= ~(1 << n);       // Single edge
 GPIO0IEV &= ~(1 << n);       // Falling edge
 GPIO0IC = (1 << n);          // Clear pending
 GPIO0IE |= (1 << n);         // Enable interrupt
-NVIC_EnableIRQ(PIOINT0_IRQn);// Enable in NVIC
+NVIC_ISER = (1 << 31);       // Enable PIO0 in NVIC (IRQ 31)
 
 // === IN ISR ===
 if (GPIO0MIS & (1 << n)) {   // Check interrupt source

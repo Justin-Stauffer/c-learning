@@ -1,4 +1,4 @@
-# Chapter 8: Breadboard Basics
+# Appendix B: Breadboard Basics
 
 ## Understanding Solderless Breadboards for Prototyping
 
@@ -607,9 +607,9 @@ You can combine multiple mini breadboards for larger projects!
 
 ---
 
-**Return to:** [Index](00-index.md) | [Chapter 7: Hardware Setup](07-hardware-setup-stlink-uart.md)
+**Return to:** [Index](../00-index.md) | [Appendix A: Hardware Setup](A-hardware-setup-stlink-uart.md)
 
 ---
 
-*Chapter 8 of the Embedded C Learning Series*
+*Appendix B of the Embedded C Learning Series*
 *Breadboard Basics for Electronics Prototyping*

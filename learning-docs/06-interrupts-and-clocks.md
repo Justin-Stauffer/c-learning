@@ -8,27 +8,44 @@ A comprehensive guide to interrupt-driven programming and clock/PLL configuratio
 
 | Section | What You'll Learn | Difficulty |
 |---------|-------------------|------------|
-| Part 0 | Essential fundamentals | ⭐ Beginner |
-| Part 1 | How clocks work | ⭐⭐ Intermediate |
+| Part 1 | Clock sources and system clock | ⭐⭐ Intermediate |
 | Part 2 | PLL configuration | ⭐⭐ Intermediate |
 | Part 3 | Interrupt basics | ⭐⭐ Intermediate |
 | Part 4 | NVIC deep dive | ⭐⭐⭐ Advanced |
-| Part 5 | Complete examples | ⭐⭐⭐ Advanced |
+| Part 5 | SysTick timer | ⭐⭐ Intermediate |
 
 **Prerequisites:** [Chapter 4: Timers and PWM](04-timers-and-pwm.md) recommended
 
 ---
 
-## Quick Start: Your First Interrupt
+## Quick Start: Your First SysTick Interrupt
 
-Before diving deep, let's see a working interrupt-driven LED blink:
+Before diving deep, let's see a working interrupt-driven LED blink using the SysTick timer:
 
 ```c
-#include "LPC13xx.h"
+#include <stdint.h>
+
+/* System Control Registers */
+#define SYSAHBCLKCTRL   (*((volatile uint32_t *)0x40048080))
+
+/* SysTick Registers (ARM Cortex-M3 core peripheral) */
+#define SYST_CSR        (*((volatile uint32_t *)0xE000E010))  /* Control and Status */
+#define SYST_RVR        (*((volatile uint32_t *)0xE000E014))  /* Reload Value */
+#define SYST_CVR        (*((volatile uint32_t *)0xE000E018))  /* Current Value */
+
+/* GPIO Port 3 (LEDs) */
+#define GPIO3DIR        (*((volatile uint32_t *)0x50038000))
+#define GPIO3DATA       (*((volatile uint32_t *)0x50033FFC))
+
+/* Clock enable */
+#define GPIO_CLK        (1 << 6)
+
+/* System clock (assuming 72 MHz after PLL setup) */
+#define SYSTEM_CLOCK    72000000UL
 
 volatile uint32_t ms_ticks = 0;
 
-// Interrupt handler - called every 1ms
+/* SysTick interrupt handler - called every 1ms */
 void SysTick_Handler(void) {
     ms_ticks++;
 }
@@ -39,18 +56,24 @@ void delay_ms(uint32_t ms) {
 }
 
 int main(void) {
-    // Configure SysTick for 1ms interrupts (at 72MHz)
-    SysTick->LOAD = 72000 - 1;  // Count to 72000 (72MHz/72000 = 1kHz = 1ms)
-    SysTick->VAL = 0;            // Clear current value
-    SysTick->CTRL = 0x07;        // Enable, use CPU clock, enable interrupt
+    /* Enable GPIO clock */
+    SYSAHBCLKCTRL |= GPIO_CLK;
 
-    // Configure LED (P3.0)
-    LPC_GPIO3->DIR |= (1 << 0);  // Output
+    /* Configure LED (P3.0) as output */
+    GPIO3DIR |= (1 << 0);
+    GPIO3DATA |= (1 << 0);  /* LED off initially */
+
+    /* Configure SysTick for 1ms interrupts at 72MHz
+     * Reload = (72,000,000 / 1000) - 1 = 71,999
+     */
+    SYST_RVR = (SYSTEM_CLOCK / 1000) - 1;
+    SYST_CVR = 0;           /* Clear current value */
+    SYST_CSR = 0x07;        /* Enable, use CPU clock, enable interrupt */
 
     while (1) {
-        LPC_GPIO3->DATA &= ~(1 << 0);  // LED ON
+        GPIO3DATA &= ~(1 << 0);  /* LED ON (active-low) */
         delay_ms(500);
-        LPC_GPIO3->DATA |= (1 << 0);   // LED OFF
+        GPIO3DATA |= (1 << 0);   /* LED OFF */
         delay_ms(500);
     }
 }
@@ -58,325 +81,17 @@ int main(void) {
 
 **What makes this different from polling?**
 - The CPU isn't stuck in a loop counting
-- `SysTick_Handler` is called automatically every 1ms
+- `SysTick_Handler` is called automatically every 1ms by hardware
 - Your main code can do other work between delays
 - More accurate timing (hardware-driven)
 
-**Key concepts you'll learn:**
-1. **Clock sources** - Where the timing comes from
-2. **PLL** - How to multiply the clock for higher speeds
-3. **Interrupts** - How hardware notifies your code
-4. **NVIC** - Managing multiple interrupt sources
-
 ---
 
-## Part 0: Essential Fundamentals
-
-Before diving into interrupts and clocks, let's cover some basic concepts you'll need to understand embedded systems code.
-
-### What is a Microcontroller?
-
-A **microcontroller** is a small computer on a single chip that includes:
-- **CPU** (Central Processing Unit): The brain that executes instructions
-- **Memory**: RAM (temporary storage) and Flash (program storage)
-- **Peripherals**: Built-in hardware modules (timers, GPIO, UART, etc.)
-- **Clock System**: Timing circuitry to control CPU speed
-
-Think of it as a mini-computer designed to control things (like LEDs, motors, sensors) rather than run general software.
-
-### Hexadecimal Numbers
-
-You'll see numbers like `0x00000001` everywhere in embedded code. The `0x` prefix means it's **hexadecimal** (base-16).
-
-**Why hexadecimal?** It maps perfectly to binary, which is how computers actually work:
-
-```
-Decimal | Hexadecimal | Binary
---------|-------------|----------
-    0   |     0x0     | 0000
-    1   |     0x1     | 0001
-    8   |     0x8     | 1000
-   15   |     0xF     | 1111
-   16   |    0x10     | 0001 0000
-  255   |    0xFF     | 1111 1111
-```
-
-**Examples from the code:**
-- `0x00000001` = binary `00000000000000000000000000000001` (bit 0 is set)
-- `0x00000020` = binary `00000000000000000000000000100000` (bit 5 is set)
-- `0x000000F0` = binary `00000000000000000000000011110000` (bits 4-7 are set)
-
-### Bitwise Operations
-
-Embedded code manipulates individual **bits** (0s and 1s) to control hardware. Here are the key operators:
-
-#### OR operator: `|` (turns bits ON)
-```c
-GPIO3DATA |= 0x00000001;  // Set bit 0 to 1 (turn LED OFF in this case)
-
-Before:  0000 0000
-OR       0000 0001
-Result:  0000 0001  (bit 0 is now 1)
-```
-
-#### AND operator: `&` (can turn bits OFF)
-```c
-GPIO3DATA &= ~0x00000001;  // Clear bit 0 to 0 (turn LED ON)
-
-Before:  0000 0001
-AND      1111 1110  (the ~ inverts 0x01 to 0xFE)
-Result:  0000 0000  (bit 0 is now 0)
-```
-
-#### NOT operator: `~` (inverts all bits)
-```c
-~0x00000001  →  0xFFFFFFFE
-
-0000 0001 → 1111 1110
-```
-
-#### Left shift: `<<` (moves bits left)
-```c
-1 << 5  →  0x00000020
-
-0000 0001 << 5 = 0010 0000  (bit moved from position 0 to 5)
-```
-
-**Why use bitwise operations?** To control individual hardware features without affecting others!
-
-### Registers: Controlling Hardware
-
-A **register** is a special memory location that controls hardware. When you write a value to a register, you're directly controlling hardware behavior.
-
-**Key concept: Memory-Mapped I/O**
-In microcontrollers, hardware peripherals are controlled by reading/writing to specific memory addresses, as if they were regular variables.
-
-```c
-GPIO3DATA |= 0x0000000F;  // This writes to a hardware register
-
-// GPIO3DATA is actually at memory address like 0x50003FFC
-// Writing to this address changes the output pins!
-```
-
-**Common registers in this code:**
-- `GPIO3DATA`: Controls the state of GPIO Port 3 pins (main.c:26)
-- `GPIO3DIR`: Sets pins as inputs or outputs (main.c:307)
-- `TMR32B0MR0`: Timer match value (main.c:274)
-- `PDRUNCFG`: Power down/up configuration (main.c:71)
-
-### GPIO (General Purpose Input/Output)
-
-**GPIO** pins are the physical pins on the microcontroller chip that you can control from software.
-
-- **Output mode**: You control the voltage (HIGH=3.3V or LOW=0V) to drive LEDs, motors, etc.
-- **Input mode**: You read external signals from buttons, sensors, etc.
-
-```c
-// Set pins as outputs (1 = output, 0 = input)
-GPIO3DIR |= 0x0000000F;  // Set pins 0-3 as outputs
-
-// Write data to outputs
-GPIO3DATA |= 0x00000001;  // Set pin 0 HIGH
-GPIO3DATA &= ~0x00000001; // Set pin 0 LOW
-```
-
-### LEDs and Active-Low Logic
-
-An **LED** (Light Emitting Diode) is a component that emits light when current flows through it.
-
-In this board, LEDs are connected **active-low**, meaning:
-- **0V (LOW)** = LED turns ON (current flows)
-- **3.3V (HIGH)** = LED turns OFF (no current)
-
-This seems backwards at first! It's a common circuit design where the LED connects between the pin and power supply.
-
-```c
-#define LED0_ON   GPIO3DATA &= ~0x00000001;  // Clear bit (0V) = ON
-#define LED0_OFF  GPIO3DATA |= 0x00000001;   // Set bit (3.3V) = OFF
-```
-
-### Peripherals
-
-**Peripherals** are specialized hardware modules built into the microcontroller. Instead of doing everything in software, you configure peripherals to handle tasks automatically.
-
-**Examples:**
-- **Timers**: Count clock cycles and generate interrupts (main.c:258)
-- **UART**: Send/receive serial data
-- **SPI/I2C**: Communication with other chips
-- **ADC**: Read analog voltages (like from sensors)
-- **PWM**: Generate variable-speed signals (for motor control)
-
-### The `volatile` Keyword
-
-You'll see this keyword in embedded code:
-
-```c
-void Delay(volatile unsigned long cycles) {
-    while(cycles) { cycles--; }
-}
-```
-
-**What does `volatile` mean?**
-It tells the compiler: "This variable might change unexpectedly, so always read it from memory - don't optimize it away!"
-
-**Why is it needed?**
-- Hardware registers can change without the CPU's direct involvement
-- Variables shared between main code and interrupt handlers
-- Prevents compiler optimization bugs
-
-### Understanding Code Structure
-
-Typical embedded program structure:
-
-```c
-// 1. Include hardware definitions
-#include <nxp/iolpc1343.h>
-
-// 2. Define macros for convenience
-#define LED0_ON GPIO3DATA &= ~0x00000001;
-
-// 3. Function prototypes (declarations)
-void init_devices(void);
-
-// 4. Initialization function
-void init_devices(void) {
-    // Configure hardware once at startup
-}
-
-// 5. Main function
-int main(void) {
-    init_devices();
-    while(1) {
-        // Infinite loop (embedded systems never "exit")
-    }
-}
-
-// 6. Interrupt handlers
-void TIMER_IRQHandler(void) {
-    // Runs automatically when timer fires
-}
-```
-
-### Quick Reference: Common Terms
-
-| Term | Meaning |
-|------|---------|
-| **Bit** | Single binary digit (0 or 1) |
-| **Byte** | 8 bits (e.g., 0xFF = 255) |
-| **Word** | 32 bits on this processor |
-| **Register** | Hardware control memory location |
-| **Peripheral** | Built-in hardware module (timer, UART, etc.) |
-| **GPIO** | General Purpose Input/Output pin |
-| **ISR** | Interrupt Service Routine (interrupt handler function) |
-| **MCU** | Microcontroller Unit |
-| **SoC** | System on Chip |
-
-### Reading Hardware Register Operations
-
-When you see code like this:
-
-```c
-PDRUNCFG &= ~0x00000080;  // Clear bit 7
-```
-
-Break it down:
-1. `PDRUNCFG` = A hardware register (Power Down Run Configuration)
-2. `&=` = AND operation that modifies the register
-3. `~0x00000080` = Inverted 0x80 = bit pattern with bit 7 clear, all others set
-4. **Result**: Clears only bit 7, leaves all other bits unchanged
-
-```c
-TMR32B0TCR_bit.CE = 1;  // Set the CE bit to 1
-```
-
-This is a **bit-field** syntax:
-- `TMR32B0TCR` = Timer Control Register
-- `_bit` = Access individual bits by name
-- `.CE` = Counter Enable bit
-- `= 1` = Set it to 1 (enable)
-
----
-
-## Part 1: Understanding Interrupts
-
-### What is an Interrupt?
-
-Think of an interrupt like a doorbell. You're sitting in your house doing something, and when someone rings the doorbell, you:
-1. **Stop** what you're doing
-2. **Save** your place (so you can return)
-3. **Go answer** the door
-4. **Return** to what you were doing
-
-In a microcontroller, an interrupt is a signal that makes the CPU temporarily stop its current task and execute a special function called an **Interrupt Service Routine (ISR)** or **Interrupt Handler**.
-
-### Two Approaches: Polling vs Interrupts
-
-#### Polling (the inefficient way)
-
-```c
-int main(void) {
-    init_devices();
-    unsigned long counter = 0;
-
-    while(1) {
-        counter++;
-        if(counter >= 18000000) {  // Check constantly!
-            // Toggle LED
-            counter = 0;
-        }
-        // CPU is ALWAYS busy checking this counter
-    }
-}
-```
-
-**Problems:**
-- CPU wastes 100% of its time checking "is it time yet? is it time yet?"
-- Can't do other tasks
-- Burns power unnecessarily
-
-#### Interrupt-Driven (the smart way)
-
-```c
-int main(void) {
-    init_devices();
-    while(1) {
-        // CPU can sleep or do other work
-        // Timer hardware counts in the background
-        // When timer expires, interrupt automatically fires
-    }
-}
-
-// This ONLY runs when the timer says "time's up!"
-void CT32B0_IRQHandler(void) {
-    // Toggle LED
-}
-```
-
-**Benefits:**
-- CPU can sleep (save power)
-- CPU can do other tasks while waiting
-- Hardware does the timing for you
-- More efficient and responsive
-
-### How Interrupts Work in This Code
-
-1. **Timer Hardware** (CT32B0) counts clock cycles in the background
-2. When counter reaches match value (MR0), timer triggers an interrupt
-3. **NVIC** (Nested Vectored Interrupt Controller) receives the signal
-4. CPU automatically:
-   - Saves its current state
-   - Jumps to `CT32B0_IRQHandler()` (main.c:346)
-   - Executes the handler (toggle LED)
-   - Returns to main loop
-5. Timer resets and starts counting again
-
----
-
-## Part 2: Understanding Clocks and Oscillators
+## Part 1: Understanding Clocks
 
 ### What is a Clock?
 
-A clock is a repeating electrical signal that pulses on/off at a regular frequency. Think of it like a metronome for musicians - it keeps time.
+A clock is a repeating electrical signal that pulses HIGH/LOW at a regular frequency. Think of it like a metronome - it keeps time for the CPU.
 
 ```
 Clock Signal:
@@ -387,281 +102,676 @@ ___|   |___|   |___|   |___|   |___
     Each pulse = 1 "clock cycle"
 ```
 
-The CPU performs operations synchronized to these pulses. **Faster clock = more operations per second**.
+The CPU performs one operation per clock cycle. **Faster clock = more operations per second**.
 
 ### Clock Frequency
 
-Measured in Hz (Hertz) = cycles per second
+Measured in Hz (Hertz) = cycles per second:
 - 1 MHz = 1,000,000 cycles/second
 - 12 MHz = 12,000,000 cycles/second
 - 72 MHz = 72,000,000 cycles/second
 
-### Oscillators: Where Clocks Come From
+### LPC1343 Clock Sources
 
-An **oscillator** is a circuit that generates a clock signal. The LPC1343 has two options:
+The LPC1343 has multiple clock sources:
 
 #### 1. Internal RC Oscillator (IRC)
 - Built into the chip
-- 12 MHz
-- ±1% to ±1.5% accuracy depending on temperature (not super precise)
+- **12 MHz**
+- ±1% accuracy (varies with temperature)
 - Available immediately on power-up
 - No external components needed
+- Default clock source on reset
 
-#### 2. External Crystal Oscillator
-- Uses a physical quartz crystal (external component on PCB)
-- Also 12 MHz in this board
-- Very accurate (±0.001%)
-- Better for timing-critical applications
-- Needs external parts
+#### 2. System Oscillator (External Crystal)
+- Uses external quartz crystal on XTALIN/XTALOUT pins
+- Typically **12 MHz** on LPC-P1343 board
+- Very accurate (±0.005%)
+- Better for timing-critical applications (UART, USB)
+- Requires external crystal and capacitors
 
-In this code (main.c:298), it uses `'E'` = External oscillator
+#### 3. Watchdog Oscillator
+- Low-power internal oscillator
+- 7.8 kHz typical (varies 5-14 kHz)
+- Used for watchdog timer and low-power modes
+
+#### 4. PLL Output
+- Takes IRC or System Oscillator as input
+- Multiplies frequency up to **72 MHz**
+- Most common clock source for full-speed operation
+
+### Clock-Related Registers
+
+```c
+/* System Control Block Registers */
+#define SYSPLLCTRL      (*((volatile uint32_t *)0x40048008))  /* PLL Control */
+#define SYSPLLSTAT      (*((volatile uint32_t *)0x4004800C))  /* PLL Status */
+#define SYSOSCCTRL      (*((volatile uint32_t *)0x40048020))  /* Sys Osc Control */
+#define MAINCLKSEL      (*((volatile uint32_t *)0x40048070))  /* Main Clock Select */
+#define MAINCLKUEN      (*((volatile uint32_t *)0x40048074))  /* Main Clock Update */
+#define SYSAHBCLKDIV    (*((volatile uint32_t *)0x40048078))  /* AHB Clock Divider */
+#define SYSAHBCLKCTRL   (*((volatile uint32_t *)0x40048080))  /* AHB Clock Control */
+#define PDRUNCFG        (*((volatile uint32_t *)0x40048238))  /* Power-Down Config */
+```
+
+### Main Clock Selection (MAINCLKSEL)
+
+| Value | Clock Source |
+|-------|--------------|
+| 0x00 | IRC Oscillator (12 MHz) |
+| 0x01 | PLL Input (IRC or System Osc) |
+| 0x02 | Watchdog Oscillator |
+| 0x03 | PLL Output |
+
+### Default Clock Configuration
+
+On reset, the LPC1343 runs at:
+- **12 MHz** from the Internal RC Oscillator
+- PLL is powered down
+- This is safe but slow
 
 ---
 
-## Part 3: Understanding the PLL (Phase-Locked Loop)
-
-### The Problem
-
-The oscillators only provide 12 MHz, but modern microcontrollers need higher speeds to:
-- Execute more instructions per second
-- Process data faster
-- Drive peripherals at higher speeds
-
-This chip can run at up to **72 MHz** - that's **6 times faster** than the oscillator!
+## Part 2: PLL Configuration
 
 ### What is a PLL?
 
-A **PLL (Phase-Locked Loop)** is a special circuit that multiplies the frequency of an input clock to create a faster output clock.
-
-Think of it like a gear system:
+A **PLL (Phase-Locked Loop)** is a circuit that multiplies the input clock frequency to create a faster output clock.
 
 ```
-Input: 12 MHz        PLL         Output: 72 MHz
-    --------→ [Multiply by 6] --------→
-    (slow)                           (fast)
+Input: 12 MHz  →  [  PLL  ]  →  Output: 72 MHz
+                  [× 6    ]
 ```
 
-### How the PLL Works (Simplified)
+### Why Use the PLL?
 
-The PLL has two key parameters:
+- The oscillators only provide 12 MHz
+- The LPC1343 can run at up to **72 MHz**
+- Faster CPU = more instructions per second
+- Many peripherals benefit from higher clock speeds
 
-#### 1. MSEL (Multiplier Select)
-- Multiplies the input frequency
-- Formula: `Output_Frequency = Input_Frequency × (MSEL + 1)`
-- Example: If MSEL = 5, then 12 MHz × 6 = 72 MHz
+### PLL Parameters
 
-#### 2. PSEL (Post-divider Select)
-- Used to keep an internal frequency (CCO) in a safe range (156-320 MHz)
-- The PLL actually creates a very high frequency internally, then divides it down
+The LPC1343 PLL has two parameters in SYSPLLCTRL:
 
-### Visual Example
+#### MSEL (bits 4:0) - Feedback Divider
+- Determines multiplication factor
+- Output frequency = Input × (MSEL + 1)
+- Valid range: 0-31
 
+#### PSEL (bits 6:5) - Post Divider
+- Keeps internal CCO frequency in valid range (156-320 MHz)
+- CCO = Output × 2 × P, where P = 2^PSEL
+
+| PSEL | P value | Division |
+|------|---------|----------|
+| 0 | 1 | ÷2 |
+| 1 | 2 | ÷4 |
+| 2 | 4 | ÷8 |
+| 3 | 8 | ÷16 |
+
+### PLL Configuration Example: 12 MHz → 72 MHz
+
+```c
+/* PLL Control Register */
+#define SYSPLLCTRL      (*((volatile uint32_t *)0x40048008))
+#define SYSPLLSTAT      (*((volatile uint32_t *)0x4004800C))
+#define MAINCLKSEL      (*((volatile uint32_t *)0x40048070))
+#define MAINCLKUEN      (*((volatile uint32_t *)0x40048074))
+#define SYSAHBCLKDIV    (*((volatile uint32_t *)0x40048078))
+#define PDRUNCFG        (*((volatile uint32_t *)0x40048238))
+
+void pll_init(void) {
+    /* Goal: 12 MHz IRC → 72 MHz system clock
+     *
+     * MSEL = (72 / 12) - 1 = 5
+     * For CCO in range 156-320 MHz:
+     *   CCO = 72 × 2 × P
+     *   With PSEL=1 (P=2): CCO = 72 × 2 × 2 = 288 MHz ✓
+     */
+
+    /* Step 1: Power up the system PLL */
+    PDRUNCFG &= ~(1 << 7);      /* Clear bit 7 to power up PLL */
+
+    /* Step 2: Configure PLL
+     * MSEL = 5 (bits 4:0) → multiply by 6
+     * PSEL = 1 (bits 6:5) → P = 2
+     * SYSPLLCTRL = (1 << 5) | 5 = 0x25
+     */
+    SYSPLLCTRL = (1 << 5) | 5;
+
+    /* Step 3: Wait for PLL to lock */
+    while (!(SYSPLLSTAT & 0x01));  /* Wait for LOCK bit */
+
+    /* Step 4: Set system AHB clock divider to 1 (no division) */
+    SYSAHBCLKDIV = 1;
+
+    /* Step 5: Select PLL output as main clock */
+    MAINCLKSEL = 0x03;          /* Select PLL output */
+
+    /* Step 6: Update main clock selection */
+    MAINCLKUEN = 0;             /* Toggle update enable */
+    MAINCLKUEN = 1;
+    while (!(MAINCLKUEN & 0x01)); /* Wait for update */
+
+    /* Now running at 72 MHz! */
+}
 ```
-Step 1: Input
-12 MHz from crystal
-    ↓
-Step 2: PLL Multiplier (MSEL)
-12 MHz × 6 (MSEL+1) = 72 MHz output frequency
-    ↓
-Step 3: PLL Internal (CCO)
-The CCO runs at: Fclkout × 2 × P (where P = 2^PSEL)
-72 MHz × 2 × 2 = 288 MHz (must be 156-320 MHz range)
-    ↓
-Step 4: System Clock Divider
-Can divide again if needed (this code uses ÷1)
-    ↓
-Final: 72 MHz to CPU and peripherals
+
+### Using External Crystal with PLL
+
+To use the more accurate external crystal:
+
+```c
+#define SYSOSCCTRL      (*((volatile uint32_t *)0x40048020))
+#define SYSPLLCLKSEL    (*((volatile uint32_t *)0x40048040))
+#define SYSPLLCLKUEN    (*((volatile uint32_t *)0x40048044))
+
+void pll_init_external(void) {
+    /* Step 1: Power up system oscillator */
+    PDRUNCFG &= ~(1 << 5);      /* Clear bit 5 to power up sys osc */
+
+    /* Step 2: Configure system oscillator for 1-20 MHz range */
+    SYSOSCCTRL = 0x00;          /* No bypass, 1-20 MHz range */
+
+    /* Wait for oscillator to stabilize (few hundred microseconds) */
+    for (volatile int i = 0; i < 1000; i++);
+
+    /* Step 3: Select system oscillator as PLL input */
+    SYSPLLCLKSEL = 0x01;        /* 0=IRC, 1=System oscillator */
+    SYSPLLCLKUEN = 0;
+    SYSPLLCLKUEN = 1;
+    while (!(SYSPLLCLKUEN & 0x01));
+
+    /* Step 4: Configure and enable PLL (same as before) */
+    PDRUNCFG &= ~(1 << 7);
+    SYSPLLCTRL = (1 << 5) | 5;  /* 12 MHz × 6 = 72 MHz */
+    while (!(SYSPLLSTAT & 0x01));
+
+    /* Step 5: Switch main clock to PLL output */
+    SYSAHBCLKDIV = 1;
+    MAINCLKSEL = 0x03;
+    MAINCLKUEN = 0;
+    MAINCLKUEN = 1;
+    while (!(MAINCLKUEN & 0x01));
+}
 ```
 
 ---
 
-## Part 4: Following the Clock Setup in This Code
+## Part 3: Understanding Interrupts
 
-Let me trace through what happens when the code runs:
+### What is an Interrupt?
 
-### Step 1: Default State (main.c:296-297)
+An interrupt is like a doorbell. You're doing something, and when someone rings:
+1. **Stop** what you're doing
+2. **Save** your place (so you can return)
+3. **Answer** the door (handle the interrupt)
+4. **Return** to what you were doing
+
+In a microcontroller, an interrupt makes the CPU temporarily stop and execute a special function called an **Interrupt Service Routine (ISR)** or **Interrupt Handler**.
+
+### Polling vs Interrupts
+
+#### Polling (inefficient)
 
 ```c
-// On power-up, chip runs at 12 MHz from internal RC oscillator
-// We want 72 MHz from external crystal instead
-Init_System_Clock(System_Clock, 'E');
-//                 72000000      External
+while (1) {
+    if (button_pressed()) {    /* Check constantly! */
+        handle_button();
+    }
+    if (timer_expired()) {     /* Check constantly! */
+        handle_timer();
+    }
+    if (uart_has_data()) {     /* Check constantly! */
+        handle_uart();
+    }
+    /* CPU is ALWAYS busy checking */
+}
 ```
 
-### Step 2: External Oscillator Setup (main.c:132-141)
+**Problems:**
+- CPU wastes time checking "is it time yet?"
+- Can miss events if checking too slowly
+- Burns power unnecessarily
+- Hard to handle multiple time-critical events
+
+#### Interrupt-Driven (efficient)
 
 ```c
-PDRUNCFG |= 0x00000020;      // Turn OFF external oscillator
-SYSOSCCLTRL = 0x00000000;    // Configure it: 1-20 MHz range
-PDRUNCFG &= ~0x00000020;     // Turn ON external oscillator
-// Now we have stable 12 MHz from crystal
+int main(void) {
+    setup_interrupts();
+    while (1) {
+        /* CPU can sleep or do other work */
+        /* Hardware monitors for events */
+    }
+}
 
-Init_PLL(12000000, 'E', 72000000);
-//       Input     External  Desired Output
+/* Called automatically by hardware when button pressed */
+void GPIO_IRQHandler(void) {
+    handle_button();
+}
+
+/* Called automatically when timer expires */
+void CT32B0_IRQHandler(void) {
+    handle_timer();
+}
+
+/* Called automatically when UART receives data */
+void UART0_IRQHandler(void) {
+    handle_uart();
+}
 ```
 
-### Step 3: PLL Calculation (main.c:66-101)
+**Benefits:**
+- CPU can sleep (saves power)
+- Immediate response to events
+- Hardware does the monitoring
+- Clean separation of concerns
 
-The code calculates MSEL and PSEL:
+### Interrupt Flow
 
-```c
-// Goal: 12 MHz input → 72 MHz output
-
-// MSEL calculation (main.c:93-94)
-MSEL = PLL_Fclkout / PLL_Fclkin;
-MSEL = 72000000 / 12000000 = 6
-MSEL = (MSEL - 1) = 5  // Hardware adds 1 back
-
-// PSEL calculation (main.c:86-90)
-// PLL needs internal CCO between 156-320 MHz
-// CCO frequency = Fclkout × 2 × P (where P = 2^PSEL)
-// PSEL determines P: PSEL=0→P=1, PSEL=1→P=2, PSEL=2→P=4, PSEL=3→P=8
-
-// For 72 MHz output with PSEL=1 (P=2):
-// CCO = 72 MHz × 2 × 2 = 288 MHz ✓ (within 156-320 MHz range)
+```
+Normal Program Execution
+        ↓
+[Interrupt Signal] ← Hardware event occurs
+        ↓
+CPU saves current state (registers, PC)
+        ↓
+CPU looks up handler address in Vector Table
+        ↓
+Jump to Interrupt Handler (ISR)
+        ↓
+Execute ISR code
+        ↓
+Clear interrupt flag
+        ↓
+CPU restores saved state
+        ↓
+Return to normal execution (exactly where it left off)
 ```
 
-### Step 4: Enable PLL and Wait for Lock (main.c:98-100)
+### LPC1343 Interrupt Sources
+
+| IRQ # | Source | Description |
+|-------|--------|-------------|
+| -1 | Reset | System reset |
+| -5 | SysTick | System tick timer (ARM core) |
+| 0-12 | PIO0_0 to PIO0_11 | GPIO Port 0 pin interrupts |
+| 13 | PIO0 | GPIO Port 0 combined |
+| 14 | PIO1 | GPIO Port 1 combined |
+| 15 | PIO2 | GPIO Port 2 combined |
+| 16 | CT16B0 | 16-bit Timer 0 |
+| 17 | CT16B1 | 16-bit Timer 1 |
+| 18 | CT32B0 | 32-bit Timer 0 |
+| 19 | CT32B1 | 32-bit Timer 1 |
+| 20 | SSP | SPI |
+| 21 | UART | UART |
+| 22 | USB_IRQ | USB |
+| 23 | USB_FIQ | USB Fast |
+| 24 | ADC | ADC conversion complete |
+| 25 | WDT | Watchdog timer |
+| 26 | BOD | Brown-out detect |
+| 27 | PIO3 | GPIO Port 3 combined |
+
+---
+
+## Part 4: NVIC (Nested Vectored Interrupt Controller)
+
+The NVIC is the ARM Cortex-M3 hardware that manages all interrupts.
+
+### NVIC Registers
 
 ```c
-PDRUNCFG &= ~0x00000080;           // Turn ON PLL
-while(!(SYSPLLSTAT & 0x1)){}       // Wait until stable
+/* NVIC Registers (ARM Cortex-M3 core) */
+#define NVIC_ISER       (*((volatile uint32_t *)0xE000E100))  /* Interrupt Set Enable */
+#define NVIC_ICER       (*((volatile uint32_t *)0xE000E180))  /* Interrupt Clear Enable */
+#define NVIC_ISPR       (*((volatile uint32_t *)0xE000E200))  /* Interrupt Set Pending */
+#define NVIC_ICPR       (*((volatile uint32_t *)0xE000E280))  /* Interrupt Clear Pending */
+#define NVIC_IPR0       (*((volatile uint32_t *)0xE000E400))  /* Interrupt Priority 0-3 */
+#define NVIC_IPR1       (*((volatile uint32_t *)0xE000E404))  /* Interrupt Priority 4-7 */
+/* ... IPR registers continue for all interrupts */
 ```
 
-The PLL takes a few microseconds to "lock" - to stabilize at the right frequency. You must wait for this!
+### Enabling an Interrupt
 
-### Step 5: Switch Main Clock (main.c:153-159)
+To enable an interrupt, you need to:
+1. Configure the peripheral to generate the interrupt
+2. Enable the interrupt in the NVIC
 
 ```c
-SYSAHBCLKDIV |= 0x1;          // Use divider of 1 (no division)
-MAINCLKSEL = 0x00000003;      // Select PLL output as main clock
-MAINCLKUEN |= 0x00000001;     // Apply the change
+/* Enable Timer CT32B0 interrupt (IRQ 18) */
+NVIC_ISER = (1 << 18);
 
-// NOW the CPU runs at 72 MHz!
+/* Enable UART interrupt (IRQ 21) */
+NVIC_ISER = (1 << 21);
+
+/* Enable GPIO Port 0 interrupt (IRQ 13) */
+NVIC_ISER = (1 << 13);
+```
+
+### Disabling an Interrupt
+
+```c
+/* Disable Timer CT32B0 interrupt */
+NVIC_ICER = (1 << 18);
+```
+
+### Interrupt Priorities
+
+The NVIC supports interrupt priorities (0-3 on LPC1343, where 0 is highest priority).
+
+```c
+/* Set CT32B0 (IRQ 18) to priority 1
+ * IPR4 handles IRQs 16-19
+ * Each IRQ gets 8 bits, but only top 2 bits used on LPC1343
+ * Priority value goes in bits [7:6] of each byte
+ */
+#define NVIC_IPR4       (*((volatile uint32_t *)0xE000E410))
+
+/* IRQ 18 is byte 2 of IPR4 (bits 23:16) */
+NVIC_IPR4 = (NVIC_IPR4 & ~(0xFF << 16)) | (1 << 22);  /* Priority 1 */
+```
+
+### Nested Interrupts
+
+"Nested" means a higher-priority interrupt can interrupt a lower-priority ISR:
+
+```
+Main code running
+    ↓
+[Low priority interrupt] → ISR_low starts
+    ↓
+[High priority interrupt] → ISR_high starts (interrupts ISR_low!)
+    ↓
+ISR_high completes
+    ↓
+ISR_low continues
+    ↓
+Return to main code
+```
+
+### Vector Table
+
+The vector table is a list of addresses at the start of flash memory. Each entry points to an interrupt handler function:
+
+```c
+/* Vector table (in startup_lpc1343_gcc.s) */
+Address 0x00000000: Initial Stack Pointer
+Address 0x00000004: Reset_Handler
+Address 0x00000008: NMI_Handler
+Address 0x0000000C: HardFault_Handler
+...
+Address 0x000000E4: CT16B0_IRQHandler  /* IRQ 16 */
+Address 0x000000E8: CT16B1_IRQHandler  /* IRQ 17 */
+Address 0x000000EC: CT32B0_IRQHandler  /* IRQ 18 */
+Address 0x000000F0: CT32B1_IRQHandler  /* IRQ 19 */
+...
+Address 0x000000F8: UART0_IRQHandler   /* IRQ 21 */
+```
+
+When you define a function with the exact handler name (like `CT32B0_IRQHandler`), the linker places its address in the vector table.
+
+---
+
+## Part 5: SysTick Timer
+
+The SysTick is a simple 24-bit countdown timer built into the ARM Cortex-M3 core. It's ideal for creating a system "heartbeat" or millisecond tick.
+
+### SysTick Registers
+
+```c
+/* SysTick Registers */
+#define SYST_CSR        (*((volatile uint32_t *)0xE000E010))  /* Control and Status */
+#define SYST_RVR        (*((volatile uint32_t *)0xE000E014))  /* Reload Value */
+#define SYST_CVR        (*((volatile uint32_t *)0xE000E018))  /* Current Value */
+#define SYST_CALIB      (*((volatile uint32_t *)0xE000E01C))  /* Calibration */
+```
+
+### SYST_CSR (Control and Status Register)
+
+| Bit | Name | Description |
+|-----|------|-------------|
+| 0 | ENABLE | 1 = Counter enabled |
+| 1 | TICKINT | 1 = Generate interrupt when counter reaches 0 |
+| 2 | CLKSOURCE | 0 = External clock, 1 = CPU clock |
+| 16 | COUNTFLAG | 1 = Counter has counted to 0 since last read |
+
+### SysTick Configuration
+
+```c
+#define SYSTEM_CLOCK    72000000UL
+
+void systick_init(uint32_t ticks_per_second) {
+    /* Calculate reload value
+     * For 1000 Hz (1ms): reload = 72,000,000 / 1000 - 1 = 71,999
+     */
+    uint32_t reload = (SYSTEM_CLOCK / ticks_per_second) - 1;
+
+    /* Ensure reload fits in 24 bits */
+    if (reload > 0xFFFFFF) {
+        reload = 0xFFFFFF;
+    }
+
+    SYST_RVR = reload;          /* Set reload value */
+    SYST_CVR = 0;               /* Clear current value */
+    SYST_CSR = (1 << 2) |       /* Use CPU clock */
+               (1 << 1) |       /* Enable interrupt */
+               (1 << 0);        /* Enable counter */
+}
+
+volatile uint32_t system_ticks = 0;
+
+void SysTick_Handler(void) {
+    system_ticks++;
+}
+
+uint32_t get_ticks(void) {
+    return system_ticks;
+}
+
+void delay_ms(uint32_t ms) {
+    uint32_t start = system_ticks;
+    while ((system_ticks - start) < ms);
+}
 ```
 
 ---
 
-## Part 5: How Timer Uses the Clock
+## Part 6: Timer Interrupts
 
-### Timer Configuration (main.c:318)
+While SysTick is great for system timing, the 32-bit timers offer more flexibility.
 
-```c
-CT32B0_Init(4);  // Initialize with divider of 4
-```
-
-### Timer Math (main.c:274)
+### CT32B0 Interrupt Example
 
 ```c
-TMR32B0MR0 = (System_Clock / SYSAHBCLKDIV) / Match_Level_Divider;
-TMR32B0MR0 = (72,000,000 / 1) / 4
-TMR32B0MR0 = 18,000,000
+/* Timer CT32B0 Registers */
+#define TMR32B0IR       (*((volatile uint32_t *)0x40014000))  /* Interrupt */
+#define TMR32B0TCR      (*((volatile uint32_t *)0x40014004))  /* Control */
+#define TMR32B0TC       (*((volatile uint32_t *)0x40014008))  /* Counter */
+#define TMR32B0PR       (*((volatile uint32_t *)0x4001400C))  /* Prescaler */
+#define TMR32B0MCR      (*((volatile uint32_t *)0x40014014))  /* Match Control */
+#define TMR32B0MR0      (*((volatile uint32_t *)0x40014018))  /* Match 0 */
+
+/* Clock and NVIC */
+#define SYSAHBCLKCTRL   (*((volatile uint32_t *)0x40048080))
+#define NVIC_ISER       (*((volatile uint32_t *)0xE000E100))
+
+#define CT32B0_CLK      (1 << 9)
+#define CT32B0_IRQn     18
+
+volatile uint32_t timer_ticks = 0;
+
+void CT32B0_IRQHandler(void) {
+    if (TMR32B0IR & 0x01) {     /* MR0 interrupt */
+        TMR32B0IR = 0x01;       /* Clear interrupt flag */
+        timer_ticks++;
+    }
+}
+
+void timer_init(uint32_t interval_ms) {
+    /* Enable timer clock */
+    SYSAHBCLKCTRL |= CT32B0_CLK;
+
+    /* Reset timer */
+    TMR32B0TCR = 0x02;          /* Reset */
+    TMR32B0TCR = 0x00;          /* Release reset */
+
+    /* Configure for 1 MHz tick (1 µs per count) */
+    TMR32B0PR = 71;             /* 72 MHz / 72 = 1 MHz */
+
+    /* Set match value for desired interval */
+    TMR32B0MR0 = (interval_ms * 1000) - 1;  /* µs to counts */
+
+    /* Configure match control: interrupt and reset on MR0 */
+    TMR32B0MCR = (1 << 0) |     /* Interrupt on MR0 */
+                 (1 << 1);      /* Reset on MR0 */
+
+    /* Clear pending interrupts */
+    TMR32B0IR = 0x1F;
+
+    /* Enable interrupt in NVIC */
+    NVIC_ISER = (1 << CT32B0_IRQn);
+
+    /* Start timer */
+    TMR32B0TCR = 0x01;
+}
 ```
 
-This means:
-- Timer counts from 0 to 18,000,000
-- Each count = 1 clock cycle = 1/72,000,000 second
-- Time per interrupt = 18,000,000 ÷ 72,000,000 = **0.25 seconds**
-
-**So LED0 toggles every 0.25 seconds** (4 times per second)
-
-Since toggle means ON→OFF or OFF→ON, the LED completes a full blink cycle (ON and OFF) every **0.5 seconds**, or **2 Hz**.
-
 ---
 
-## Summary Flowchart
+## Best Practices for ISRs
 
-```
-Power On
-    ↓
-[12 MHz Internal RC Oscillator] ← Default
-    ↓
-init_devices() called
-    ↓
-Init_System_Clock(72MHz, 'E')
-    ↓
-[12 MHz External Crystal] ← More stable
-    ↓
-Init_PLL() multiplies by 6
-    ↓
-[72 MHz PLL Output]
-    ↓
-Main Clock = 72 MHz ← CPU runs at this speed
-    ↓
-CT32B0 Timer uses this clock
-    ↓
-Counts to 18,000,000 (0.25 sec)
-    ↓
-INTERRUPT! → CT32B0_IRQHandler()
-    ↓
-Toggle LED0
-    ↓
-Clear interrupt, return to main
-    ↓
-(Repeat forever)
+### 1. Keep ISRs Short
+
+```c
+/* BAD - too much work in ISR */
+void UART0_IRQHandler(void) {
+    char buffer[100];
+    read_all_data(buffer);
+    process_data(buffer);      /* This takes too long! */
+    send_response(buffer);
+}
+
+/* GOOD - set flag, process in main loop */
+volatile uint8_t uart_data_ready = 0;
+
+void UART0_IRQHandler(void) {
+    /* Just read the byte and set a flag */
+    rx_buffer[rx_head++] = U0RBR;
+    uart_data_ready = 1;
+}
+
+int main(void) {
+    while (1) {
+        if (uart_data_ready) {
+            process_data();    /* Heavy processing in main loop */
+            uart_data_ready = 0;
+        }
+    }
+}
 ```
 
----
+### 2. Always Clear Interrupt Flags
 
-## Key Takeaways
+```c
+void CT32B0_IRQHandler(void) {
+    /* MUST clear flag or interrupt fires forever! */
+    TMR32B0IR = 0x01;
 
-1. **Interrupts** let hardware notify the CPU when something happens, so the CPU doesn't waste time checking constantly
+    /* Do your work */
+    toggle_led();
+}
+```
 
-2. **Oscillators** create the base clock signal (12 MHz)
+### 3. Use `volatile` for Shared Variables
 
-3. **PLL** multiplies that slow clock to a faster speed (72 MHz) so the CPU can work faster
+```c
+volatile uint32_t tick_count = 0;  /* Shared between ISR and main */
 
-4. **Timer** counts clock cycles in hardware and generates interrupts at precise intervals
+void SysTick_Handler(void) {
+    tick_count++;  /* Modified in ISR */
+}
 
-5. **Interrupt Handler** is a function that runs automatically when the interrupt fires
+int main(void) {
+    while (tick_count < 1000);  /* Read in main - needs volatile! */
+}
+```
 
----
+### 4. Be Careful with Shared Data
 
-## Additional Notes
+```c
+/* DANGEROUS - data corruption possible */
+volatile uint32_t sensor_value;
 
-### Why Use Interrupts?
+void ADC_IRQHandler(void) {
+    sensor_value = read_adc();  /* 32-bit write */
+}
 
-Interrupts are essential in embedded systems for:
-- **Power efficiency**: CPU can sleep between events
-- **Responsiveness**: React immediately to external events
-- **Multitasking**: Handle multiple tasks without explicitly checking each one
-- **Precise timing**: Hardware timers are more accurate than software delays
+int main(void) {
+    uint32_t value = sensor_value;  /* May read partial update! */
+}
 
-### Common Interrupt Sources
-
-- **Timers**: Generate periodic interrupts (like in this code)
-- **GPIO pins**: External buttons, sensors
-- **UART/SPI/I2C**: Communication interfaces
-- **ADC**: Analog-to-digital conversion complete
-- **DMA**: Data transfer complete
-
-### NVIC (Nested Vectored Interrupt Controller)
-
-The NVIC is the hardware that manages interrupts on ARM Cortex-M processors:
-- Can handle multiple interrupt sources
-- Prioritizes interrupts (higher priority can interrupt lower priority)
-- Automatically saves/restores CPU state
-- Provides pending/active status for each interrupt
-
-### Best Practices for ISRs
-
-1. **Keep them SHORT**: Do minimal work in the handler
-2. **Don't block**: No delays or waiting in ISRs
-3. **Set flags**: Often ISRs just set a flag that main loop checks
-4. **Clear flags**: Always clear the interrupt flag before returning
-5. **Volatile variables**: Use `volatile` keyword for variables shared between ISR and main
+/* SAFER - disable interrupts briefly */
+int main(void) {
+    __disable_irq();
+    uint32_t value = sensor_value;
+    __enable_irq();
+}
+```
 
 ---
 
-## Further Learning
+## Quick Reference
 
-To deepen your understanding:
+### Clock Registers
 
-1. Read the LPC1343 User Manual (chapters on Clock Generation and Timers)
-2. Study ARM Cortex-M3 documentation (the CPU core used in LPC1343)
-3. Experiment with changing timer dividers to see different blink rates
-4. Try adding interrupts from GPIO pins (button presses)
-5. Learn about Real-Time Operating Systems (RTOS) which build on these concepts
+```c
+#define SYSPLLCTRL      (*((volatile uint32_t *)0x40048008))
+#define SYSPLLSTAT      (*((volatile uint32_t *)0x4004800C))
+#define SYSOSCCTRL      (*((volatile uint32_t *)0x40048020))
+#define SYSPLLCLKSEL    (*((volatile uint32_t *)0x40048040))
+#define SYSPLLCLKUEN    (*((volatile uint32_t *)0x40048044))
+#define MAINCLKSEL      (*((volatile uint32_t *)0x40048070))
+#define MAINCLKUEN      (*((volatile uint32_t *)0x40048074))
+#define SYSAHBCLKDIV    (*((volatile uint32_t *)0x40048078))
+#define SYSAHBCLKCTRL   (*((volatile uint32_t *)0x40048080))
+#define PDRUNCFG        (*((volatile uint32_t *)0x40048238))
+```
+
+### NVIC Registers
+
+```c
+#define NVIC_ISER       (*((volatile uint32_t *)0xE000E100))
+#define NVIC_ICER       (*((volatile uint32_t *)0xE000E180))
+#define NVIC_ISPR       (*((volatile uint32_t *)0xE000E200))
+#define NVIC_ICPR       (*((volatile uint32_t *)0xE000E280))
+```
+
+### SysTick Registers
+
+```c
+#define SYST_CSR        (*((volatile uint32_t *)0xE000E010))
+#define SYST_RVR        (*((volatile uint32_t *)0xE000E014))
+#define SYST_CVR        (*((volatile uint32_t *)0xE000E018))
+```
+
+### Common IRQ Numbers
+
+```c
+#define CT16B0_IRQn     16
+#define CT16B1_IRQn     17
+#define CT32B0_IRQn     18
+#define CT32B1_IRQn     19
+#define SSP_IRQn        20
+#define UART_IRQn       21
+#define ADC_IRQn        24
+#define WDT_IRQn        25
+#define PIO3_IRQn       27
+#define PIO2_IRQn       28
+#define PIO1_IRQn       29
+#define PIO0_IRQn       30
+```
 
 ---
 
@@ -682,11 +792,11 @@ Congratulations! You've completed the core curriculum of the Embedded C Learning
 - [Chapter 0: Getting Started](00-getting-started.md) - Quick reference
 - Build your own projects combining these concepts!
 
-**Suggested projects to solidify your learning:**
+**Suggested projects:**
 1. **Reaction timer** - Measure button press reaction time with UART output
 2. **PWM LED with serial control** - Adjust brightness via terminal commands
-3. **Multi-channel data logger** - ADC sampling with timestamped UART output
-4. **State machine** - Interrupt-driven mode switching
+3. **Multi-channel data logger** - Timer-triggered ADC sampling with UART output
+4. **State machine** - Interrupt-driven mode switching with button input
 
 ---
 

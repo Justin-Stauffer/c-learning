@@ -1114,6 +1114,8 @@ INTERRUPTS:
 // Interrupt-driven UART initialization
 // ============================================
 
+#define NVIC_ISER (*((volatile uint32_t *)0xE000E100))
+
 void uart_init_interrupt(uint32_t baud_rate) {
     // Basic init (same as before)
     SYSAHBCLKCTRL |= (1 << 12);
@@ -1131,8 +1133,8 @@ void uart_init_interrupt(uint32_t baud_rate) {
     // Enable receive interrupt
     U0IER = (1 << 0);  // RBRIE - Receive data available interrupt
 
-    // Enable UART interrupt in NVIC
-    NVIC_EnableIRQ(UART_IRQn);
+    // Enable UART interrupt in NVIC (UART is IRQ 21)
+    NVIC_ISER = (1 << 21);
 }
 ```
 
@@ -1350,7 +1352,7 @@ void uart_init_buffered(uint32_t baud_rate) {
     // Enable RX interrupt only (TX enabled when needed)
     U0IER = (1 << 0);
 
-    NVIC_EnableIRQ(UART_IRQn);
+    NVIC_ISER = (1 << 21);  // UART IRQ
 }
 
 // ============================================
@@ -2250,7 +2252,7 @@ void uart_template_init(uint32_t baud) {
 
     // 7. (Optional) Enable interrupts
     // U0IER = 0x01;  // RX interrupt
-    // NVIC_EnableIRQ(UART_IRQn);
+    // NVIC_ISER = (1 << 21);  // UART IRQ
 }
 ```
 
@@ -2414,6 +2416,13 @@ SYSAHBCLKCTRL |= (1 << 12);  // Enable UART clock
 UARTCLKDIV = 1;               // UART clock = system clock / 1
 ```
 
+### NVIC Interrupt
+
+```c
+#define NVIC_ISER (*((volatile uint32_t *)0xE000E100))
+NVIC_ISER = (1 << 21);  // UART IRQ is 21
+```
+
 ### Pin Configuration
 
 ```c
@@ -2472,7 +2481,7 @@ if (U0LSR & 0x1E) { /* error */ }
 
 // Enable RX interrupt
 U0IER |= (1 << 0);
-NVIC_EnableIRQ(UART_IRQn);
+NVIC_ISER = (1 << 21);  // UART IRQ
 ```
 
 ### Baud Rate Quick Reference (72 MHz)
