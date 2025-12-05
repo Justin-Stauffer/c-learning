@@ -42,6 +42,7 @@ A comprehensive, front-to-back curriculum for learning embedded C programming on
 | **B** | [Breadboard Basics](appendix/B-breadboard-basics.md) | Wiring and prototyping fundamentals |
 | **C** | [Recommended Hardware](appendix/C-recommended-hardware.md) | Sensors and components for hands-on learning |
 | **D** | [Startup Assembly Explained](appendix/D-startup-assembly-explained.md) | Understanding the startup code |
+| **E** | [Reading Datasheets](appendix/E-reading-datasheets.md) | Finding register addresses in manufacturer docs |
 
 ---
 

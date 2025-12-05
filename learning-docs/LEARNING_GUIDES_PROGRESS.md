@@ -104,6 +104,7 @@ Located in `appendix/` folder:
 | B | Breadboard Basics | `appendix/B-breadboard-basics.md` | ✅ Complete |
 | C | Recommended Hardware | `appendix/C-recommended-hardware.md` | ✅ Complete |
 | D | Startup Assembly Explained | `appendix/D-startup-assembly-explained.md` | ✅ Complete |
+| E | Reading Datasheets | `appendix/E-reading-datasheets.md` | ✅ Complete |
 
 ---
 
