@@ -102,6 +102,8 @@ Located in `appendix/` folder:
 |----------|-------|------|--------|
 | A | Hardware Setup (ST-Link & UART) | `appendix/A-hardware-setup-stlink-uart.md` | ✅ Complete |
 | B | Breadboard Basics | `appendix/B-breadboard-basics.md` | ✅ Complete |
+| C | Recommended Hardware | `appendix/C-recommended-hardware.md` | ✅ Complete |
+| D | Startup Assembly Explained | `appendix/D-startup-assembly-explained.md` | ✅ Complete |
 
 ---
 

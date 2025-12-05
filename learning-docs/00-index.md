@@ -20,15 +20,28 @@ A comprehensive, front-to-back curriculum for learning embedded C programming on
 
 ### Core Curriculum (Recommended Order)
 
-| Chapter | Title | Key Skills | Time |
-|---------|-------|------------|------|
-| **0** | [Getting Started](00-getting-started.md) | First program, environment setup | 1-2 hrs |
-| **1** | [Bitwise Operations](01-bitwise-operations.md) | AND, OR, XOR, shifts, register manipulation | 2-3 hrs |
-| **2** | [Firmware Build Process](02-firmware-build-process.md) | Compilation, linking, memory layout | 2-3 hrs |
-| **3** | [GPIO In-Depth](03-gpio-in-depth.md) | Pin configuration, input/output, IOCON | 3-4 hrs |
-| **4** | [Timers and PWM](04-timers-and-pwm.md) | Timer configuration, PWM, motor control | 3-4 hrs |
-| **5** | [UART Serial Communication](05-uart-serial-communication.md) | Serial protocols, printf, debugging | 3-4 hrs |
-| **6** | [Interrupts and Clocks](06-interrupts-and-clocks.md) | ISRs, NVIC, PLL, clock configuration | 3-4 hrs |
+| Chapter | Title | Key Skills |
+|---------|-------|------------|
+| **0** | [Getting Started](00-getting-started.md) | First program, environment setup |
+| **1** | [Bitwise Operations](01-bitwise-operations.md) | AND, OR, XOR, shifts, register manipulation |
+| **2** | [Firmware Build Process](02-firmware-build-process.md) | Compilation, linking, memory layout |
+| **3** | [GPIO In-Depth](03-gpio-in-depth.md) | Pin configuration, input/output, IOCON |
+| **4** | [Timers and PWM](04-timers-and-pwm.md) | Timer configuration, PWM, motor control |
+| **5** | [UART Serial Communication](05-uart-serial-communication.md) | Serial protocols, printf, debugging |
+| **6** | [Interrupts and Clocks](06-interrupts-and-clocks.md) | ISRs, NVIC, PLL, clock configuration |
+| **7** | [ADC: Analog to Digital](07-adc-analog-to-digital.md) | Analog input, sensors, voltage measurement |
+| **8** | [I2C Communication](08-i2c-communication.md) | I2C protocol, sensors, EEPROM |
+| **9** | [SPI Communication](09-spi-communication.md) | SPI protocol, flash memory, displays |
+| **10** | [Power Management](10-power-management.md) | Sleep modes, wake-up, low-power design |
+
+### Appendices
+
+| Appendix | Title | Description |
+|----------|-------|-------------|
+| **A** | [Hardware Setup](appendix/A-hardware-setup-stlink-uart.md) | ST-Link and UART adapter configuration |
+| **B** | [Breadboard Basics](appendix/B-breadboard-basics.md) | Wiring and prototyping fundamentals |
+| **C** | [Recommended Hardware](appendix/C-recommended-hardware.md) | Sensors and components for hands-on learning |
+| **D** | [Startup Assembly Explained](appendix/D-startup-assembly-explained.md) | Understanding the startup code |
 
 ---
 
@@ -56,6 +69,18 @@ A comprehensive, front-to-back curriculum for learning embedded C programming on
 
 #### Using Interrupts
 → [Chapter 6: Interrupts](06-interrupts-and-clocks.md) - Handler functions, NVIC, priorities
+
+#### Reading Analog Sensors
+→ [Chapter 7: ADC](07-adc-analog-to-digital.md) - Potentiometers, light sensors, voltage measurement
+
+#### Connecting I2C Devices
+→ [Chapter 8: I2C](08-i2c-communication.md) - Temperature sensors, displays, EEPROM
+
+#### Connecting SPI Devices
+→ [Chapter 9: SPI](09-spi-communication.md) - Flash memory, high-speed peripherals
+
+#### Reducing Power Consumption
+→ [Chapter 10: Power Management](10-power-management.md) - Sleep modes, wake-up sources
 
 ---
 
@@ -111,6 +136,52 @@ void uart_init(void) {
 void uart_putchar(char c) {
     while (!(LPC_UART->LSR & 0x20));  // Wait for THR empty
     LPC_UART->THR = c;
+}
+```
+
+### ADC Read
+```c
+void adc_init(void) {
+    LPC_SYSCON->SYSAHBCLKCTRL |= (1 << 13);  // Enable ADC clock
+    LPC_IOCON->R_PIO0_11 = 0x02;              // AD0 function
+    LPC_ADC->CR = (1 << 0)                    // Channel 0
+                | (11 << 8)                   // Clock divider
+                | (1 << 21);                  // Power on
+}
+
+uint16_t adc_read(void) {
+    LPC_ADC->CR |= (1 << 24);                 // Start conversion
+    while (!(LPC_ADC->GDR & (1 << 31)));      // Wait for done
+    LPC_ADC->CR &= ~(7 << 24);                // Clear start
+    return (LPC_ADC->GDR >> 6) & 0x3FF;       // 10-bit result
+}
+```
+
+### I2C Basic Transfer
+```c
+// Send START, address, data, STOP
+void i2c_write_byte(uint8_t addr, uint8_t data) {
+    LPC_I2C->CONSET = I2C_STA;                // START
+    while (!(LPC_I2C->CONSET & I2C_SI));      // Wait
+    LPC_I2C->DAT = (addr << 1);               // Address + Write
+    LPC_I2C->CONCLR = I2C_SI | I2C_STA;
+    while (!(LPC_I2C->CONSET & I2C_SI));
+    LPC_I2C->DAT = data;                      // Data byte
+    LPC_I2C->CONCLR = I2C_SI;
+    while (!(LPC_I2C->CONSET & I2C_SI));
+    LPC_I2C->CONSET = I2C_STO;                // STOP
+    LPC_I2C->CONCLR = I2C_SI;
+}
+```
+
+### SPI Transfer
+```c
+uint8_t spi_transfer(uint8_t data) {
+    while (!(LPC_SSP0->SR & SSP_TNF));        // Wait TX not full
+    LPC_SSP0->DR = data;                      // Send byte
+    while (LPC_SSP0->SR & SSP_BSY);           // Wait for complete
+    while (!(LPC_SSP0->SR & SSP_RNE));        // Wait RX not empty
+    return LPC_SSP0->DR;                      // Return received byte
 }
 ```
 
@@ -172,6 +243,24 @@ When something doesn't work, check these common issues:
 - [ ] Is the handler named exactly right? (e.g., `TIMER32_0_IRQHandler`)
 - [ ] Are you clearing the interrupt flag in the handler?
 
+### ADC Reading Wrong Values
+- [ ] Is ADC clock enabled?
+- [ ] Is pin configured for analog mode (ADMODE=0)?
+- [ ] Is conversion actually complete (DONE bit)?
+- [ ] Check voltage reference and input range
+
+### I2C Not Responding
+- [ ] Are pull-up resistors installed (4.7K typical)?
+- [ ] Is the I2C address correct (7-bit, not shifted)?
+- [ ] Are SDA/SCL pins configured for I2C function?
+- [ ] Use I2C scanner to detect devices
+
+### SPI Not Working
+- [ ] Is chip select (CS) going LOW during transfer?
+- [ ] Check SPI mode (CPOL/CPHA) matches device
+- [ ] Are MOSI/MISO swapped?
+- [ ] Try slower clock speed first
+
 ---
 
 ## Suggested Project Progression
@@ -210,4 +299,4 @@ After completing the core curriculum, try these projects in order:
 ---
 
 *Embedded C Learning Series - LPC1343*
-*Last Updated: 2025*
+*Last Updated: December 2025*
