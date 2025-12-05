@@ -1,0 +1,21 @@
+# Generated files
+epub-pandoc-command.txt
+
+# Manufacturer examples (not part of curriculum)
+Manufacturer_Examples/
+
+# Build artifacts
+build/
+*.o
+*.elf
+*.bin
+*.hex
+*.map
+*.d
+
+# IDE/Editor files
+.vscode/settings.json
+*.swp
+*.swo
+*~
+.DS_Store
