@@ -106,17 +106,12 @@ The **LPC1343** is a microcontroller made by NXP. Think of it as a tiny, complet
 
 You need a **toolchain** to convert your C code into something the chip can run.
 
-**Option A: GCC ARM (Free, Recommended for Learning)**
+**GCC ARM Toolchain (Free, Open Source)**
 - Works on Windows, Mac, Linux
-- Command-line based (with IDE options)
-- Open source
+- Command-line based (with IDE options like VS Code)
+- Industry-standard tools used in professional development
 
-**Option B: IAR Embedded Workbench (Commercial)**
-- Professional IDE
-- Excellent optimization
-- Expensive license (free size-limited version available)
-
-This guide assumes **GCC ARM**. See [BUILD_INSTRUCTIONS_GCC.md](BUILD_INSTRUCTIONS_GCC.md) for detailed GCC setup and build instructions.
+See [BUILD_INSTRUCTIONS_GCC.md](BUILD_INSTRUCTIONS_GCC.md) for detailed setup and build instructions.
 
 ---
 

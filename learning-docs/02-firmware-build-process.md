@@ -50,6 +50,8 @@ The rest of this chapter explains what these commands actually do and why.
 
 ## Part 1: Understanding the Files in Your Project
 
+Every example in this curriculum contains these files:
+
 ### Source Code Files
 
 #### **main.c** - Your Application Code
@@ -64,15 +66,15 @@ int main(void) {
 - Gets compiled into machine code
 - This is where YOU write your program
 
-#### **cstartup_M.s** - Startup Code (Assembly)
+#### **startup_lpc1343_gcc.s** - Startup Code (Assembly)
 ```assembly
-__vector_table
-    DCD     sfe(CSTACK)              ; Top of Stack
-    DCD     __iar_program_start      ; Reset Handler
-    DCD     NMI_Handler              ; NMI Handler
+g_pfnVectors:
+    .word   _estack                 ; Top of Stack
+    .word   Reset_Handler           ; Reset Handler
+    .word   NMI_Handler             ; NMI Handler
     ...
 ```
-- Written in ARM assembly language
+- Written in ARM assembly language (GNU syntax)
 - Runs **BEFORE** your `main()` function
 - Creates the **Vector Table** (list of interrupt handler addresses)
 - Sets up the stack pointer
@@ -87,16 +89,18 @@ When the microcontroller powers on or resets:
 4. Startup code initializes everything
 5. Finally jumps to your `main()`
 
+For a deep dive into startup assembly, see [Appendix D: Startup Assembly Explained](appendix/D-startup-assembly-explained.md).
+
 ### Configuration Files
 
-#### **LPC1343_Flash.icf** - Linker Configuration File
+#### **lpc1343_flash.ld** - Linker Script
 
 This file tells the **linker** where to place code and data in memory.
 
 ```
 Memory Layout for LPC1343:
 ┌─────────────────────────────┐ 0x00000000
-│  Interrupt Vector Table     │ (first 0x124 bytes = 292 bytes = 73 vectors × 4 bytes)
+│  Interrupt Vector Table     │ (first 0x124 bytes = 292 bytes)
 ├─────────────────────────────┤ 0x00000124
 │                             │
 │  Flash Memory (ROM)         │ Your program code lives here
@@ -115,72 +119,37 @@ Memory Layout for LPC1343:
 └─────────────────────────────┘ 0x10001FFF
 ```
 
-**Key sections from LPC1343_Flash.icf:**
+**Key memory regions:**
 ```
-ROM: 0x00000124 to 0x00007FFF  (~31.7 KB usable, 32 KB total)  - Where your code lives
-RAM: 0x10000000 to 0x10001FFF  (8 KB)    - Where variables live
-Stack: 0x800 bytes (2 KB)                - For function calls
-Heap: 0x400 bytes (1 KB)                 - For malloc() (if used)
+ROM: 0x00000000 to 0x00007FFF  (32 KB) - Where your code lives
+RAM: 0x10000000 to 0x10001FFF  (8 KB)  - Where variables live
+Stack: ~2 KB                           - For function calls
+Heap: ~512 bytes                       - For malloc() (if used)
 ```
 
-#### **Project Files (.ewp, .ewd, .eww)**
+#### **Makefile** - Build Automation
 
-These are specific to **IAR Embedded Workbench** IDE:
-- `.ewp` = Project settings (which files to compile, compiler options)
-- `.ewd` = Debugger settings (how to connect to hardware)
-- `.eww` = Workspace (can contain multiple projects)
+The Makefile automates the entire build process:
 
-**Note:** These are IDE-specific. Other toolchains use different project files:
-- GCC/Make: `Makefile`
-- Keil MDK: `.uvproj`
-- Eclipse: `.project` and `.cproject`
+```makefile
+# Key variables
+PROJECT = lpc1343_example
+CC = arm-none-eabi-gcc
+LDSCRIPT = lpc1343_flash.ld
 
----
+# Build targets
+all: $(PROJECT).elf $(PROJECT).hex $(PROJECT).bin
+clean: rm -rf build/
+flash: openocd -c "program $(PROJECT).elf reset exit"
+```
 
-## Part 1.5: IAR vs GCC - Which Files to Use?
-
-This example project includes files for **both IAR and GCC toolchains**. Use the files that match your toolchain!
-
-### IAR Embedded Workbench Files
-If you're using IAR EWARM:
-- ✅ `cstartup_M.s` - IAR startup code
-- ✅ `LPC1343_Flash.icf` - IAR linker script
-- ✅ `*.ewp`, `*.ewd`, `*.eww` - IAR project files
-- ✅ `main.c` - Your code (works with both)
-
-### GCC ARM Toolchain Files
-If you're using `arm-none-eabi-gcc`:
-- ✅ `startup_lpc1343_gcc.s` - GCC startup code
-- ✅ `lpc1343_flash.ld` - GCC linker script
-- ✅ `Makefile` - Build automation
-- ✅ `.vscode/tasks.json` - VSCode integration
-- ✅ `main.c` - Your code (works with both)
-
-### Key Differences
-
-| Aspect | IAR | GCC |
-|--------|-----|-----|
-| **Startup File** | `cstartup_M.s` (IAR syntax) | `startup_lpc1343_gcc.s` (GNU syntax) |
-| **Linker Script** | `LPC1343_Flash.icf` | `lpc1343_flash.ld` |
-| **Project File** | `.ewp` XML | `Makefile` |
-| **Build Command** | Click "Build" in IDE | `make` in terminal |
-| **Assembly Syntax** | `DCD`, `SECTION`, `PUBWEAK` | `.word`, `.section`, `.weak` |
-| **Intrinsics** | `__disable_interrupt()` | `__disable_irq()` |
-
-### Why This Matters
-
-**The main.c code is ~95% compatible** between toolchains, but:
-- **Startup code is NOT compatible** - different assembly syntax
-- **Linker scripts are NOT compatible** - different formats
-- **Project files are NOT compatible** - different tools
-
-**Bottom line:** If you're using GCC, use the GCC files. Don't try to mix them!
+Instead of typing long compiler commands, you just type `make`.
 
 ---
 
 ## Part 2: The Build Process (Compilation Pipeline)
 
-Here's what happens when you click "Build" in your IDE:
+Here's what happens when you run `make`:
 
 ```
 Step 1: PREPROCESSING
@@ -200,7 +169,7 @@ main.o (object file)
 Machine code, not yet linked
 
 Step 3: ASSEMBLY (for startup code)
-startup.s (startup_lpc1343_gcc.s or cstartup_M.s)
+startup_lpc1343_gcc.s
         ↓
     [Assembler]
         ↓
@@ -209,7 +178,7 @@ startup.o (object file)
 Step 4: LINKING
 main.o + startup.o + libraries
         ↓
-    [Linker] (uses linker script: .ld or .icf)
+    [Linker] (uses lpc1343_flash.ld)
         ↓
 program.elf (executable)
 Complete program with addresses resolved
@@ -217,7 +186,7 @@ Complete program with addresses resolved
 Step 5: CONVERSION
 program.elf
         ↓
-    [objcopy/ielftool]
+    [objcopy]
         ↓
 program.hex or program.bin
 Ready to flash to microcontroller!
@@ -228,9 +197,9 @@ Ready to flash to microcontroller!
 #### Step 1: Preprocessing
 ```bash
 # Preprocessor handles:
-#include <nxp/iolpc1343.h>  → Inserts file contents
-#define LED0_ON GPIO3DATA &= ~0x01;  → Text substitution
-#ifdef DEBUG ... #endif      → Conditional compilation
+#include <stdint.h>           → Inserts file contents
+#define LED_PIN 7             → Text substitution
+#ifdef DEBUG ... #endif       → Conditional compilation
 ```
 
 **Output:** Pure C code with all macros expanded
@@ -240,15 +209,13 @@ Ready to flash to microcontroller!
 # Compiler translates C to machine code:
 
 C Code:
-    LED0_ON;
+    GPIO0DATA |= (1 << 7);
 
 Assembly equivalent (ARM Thumb-2):
-    LDR  R0, =GPIO3DATA   ; Load address of GPIO3DATA
+    LDR  R0, =GPIO0DATA   ; Load address of GPIO0DATA
     LDR  R1, [R0]         ; Read current value
-    BIC  R1, R1, #0x01    ; Clear bit 0 (bit clear)
+    ORR  R1, R1, #0x80    ; Set bit 7
     STR  R1, [R0]         ; Write back
-
-; The actual machine code bytes depend on exact addresses and encoding
 ```
 
 **Output:** `.o` object files (machine code, but addresses not final)
@@ -261,7 +228,7 @@ The **linker** combines all object files into one executable:
 What the linker does:
 1. Combines all .o files
 2. Resolves function calls (connects main() to init_devices())
-3. Assigns final memory addresses using .icf file
+3. Assigns final memory addresses using linker script
 4. Adds startup code
 5. Creates complete memory image
 
@@ -285,14 +252,14 @@ Microcontrollers need firmware in specific formats:
 - Executable code
 - Debug symbols (variable names, line numbers)
 - Section information
-- Too much info for simple programmers
+- Used for debugging
 
 **HEX file** (.hex) - Intel Hex Format:
 ```
 :10000000B0050020C9010000D70100001D020000EE
 :10001000000000000000000000000000000000003C
 ```
-- Text format (human-readable)
+- Text format (human-readable addresses)
 - Contains: address + data + checksum
 - Used by most programmer tools
 
@@ -303,7 +270,6 @@ B0 05 00 20 C9 01 00 00 D7 01 00 00 1D 02 00 00
 - Pure binary data
 - Exact image of what goes in Flash
 - Smallest file size
-- Just bytes, no structure
 
 ---
 
@@ -314,53 +280,18 @@ B0 05 00 20 C9 01 00 00 D7 01 00 00 1D 02 00 00
 | `.c` | C Source | Human-readable source code | Your code |
 | `.h` | Header | Function declarations, macros | #included in .c files |
 | `.s` | Assembly | Low-level assembly code | Startup, critical routines |
-| `.o` / `.obj` | Object | Compiled but not linked | Intermediate build output |
-| `.a` / `.lib` | Library | Collection of .o files | Reusable code modules |
-| `.elf` | Executable | Complete program with debug info | Debugging in IDE |
+| `.o` | Object | Compiled but not linked | Intermediate build output |
+| `.elf` | Executable | Complete program with debug info | Debugging |
 | `.hex` | Intel Hex | Text format firmware | Programming/flashing |
 | `.bin` | Binary | Raw binary firmware | Programming/flashing |
 | `.map` | Map File | Memory layout report | See what's where |
-| `.lst` | Listing | Assembly with addresses | Debug/optimization |
+| `.d` | Dependencies | Header file dependencies | Incremental builds |
 
 ---
 
 ## Part 4: How to Build Firmware (Step by Step)
 
-### Using IAR Embedded Workbench (Your Current Setup)
-
-1. **Open the Workspace**
-   - Double-click `LPC-P1343_LEDs_Running_Light.eww`
-   - IAR Embedded Workbench IDE opens
-
-2. **Build the Project**
-   - Press `F7` or click "Project → Make"
-   - IDE runs all build steps automatically
-   - Watch the output window for errors
-
-3. **Build Output Files Created**
-   ```
-   Debug/ or Release/ folder:
-   ├── LPC-P1343_LEDs_Running_Light.elf  (main executable)
-   ├── LPC-P1343_LEDs_Running_Light.hex  (for programming)
-   ├── LPC-P1343_LEDs_Running_Light.map  (memory map)
-   ├── main.o                            (compiled main.c)
-   └── cstartup_M.o                      (compiled startup)
-   ```
-
-4. **Verify Build Success**
-   - Look for: `0 errors, 0 warnings`
-   - Check file sizes make sense (code < 32KB, data < 8KB)
-
-### Using GCC ARM Toolchain (arm-none-eabi-*)
-
-If you're using the GCC ARM toolchain with VSCode:
-
-#### Prerequisites
-1. Install GCC ARM toolchain: https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm
-2. Ensure `arm-none-eabi-gcc` is in your PATH
-3. Install Make (MinGW, Cygwin, or WSL on Windows)
-
-#### Build from Command Line
+### Build from Command Line
 
 **1. Build the Project**
 ```bash
@@ -374,17 +305,17 @@ make all
 This automatically:
 - Compiles `main.c` → `main.o`
 - Assembles `startup_lpc1343_gcc.s` → `startup_lpc1343_gcc.o`
-- Links all objects → `lpc1343_getting_started.elf`
-- Converts to HEX → `lpc1343_getting_started.hex`
-- Converts to BIN → `lpc1343_getting_started.bin`
+- Links all objects → `project.elf`
+- Converts to HEX → `project.hex`
+- Converts to BIN → `project.bin`
 
 **2. Build Output Files Created**
 ```
 build/ folder:
-├── lpc1343_getting_started.elf     (executable with debug info)
-├── lpc1343_getting_started.hex     (Intel HEX for programming)
-├── lpc1343_getting_started.bin     (raw binary for programming)
-├── lpc1343_getting_started.map     (memory map)
+├── project.elf           (executable with debug info)
+├── project.hex           (Intel HEX for programming)
+├── project.bin           (raw binary for programming)
+├── project.map           (memory map)
 ├── main.o                (compiled main.c)
 ├── startup_lpc1343_gcc.o (compiled startup)
 └── *.d                   (dependency files)
@@ -397,13 +328,12 @@ make size
 
 Output:
 ```
-=== Memory Usage ===
    text    data     bss     dec     hex filename
-   4532     108    2048    6688    1a20 build/lpc1343_getting_started.elf
+    748       8    1568    2324     914 build/project.elf
 
-text: 4532 bytes (Flash) - Your code + constants
-data:  108 bytes (Flash→RAM) - Initialized variables
-bss:  2048 bytes (RAM) - Uninitialized variables + stack
+text:  748 bytes (Flash) - Your code + constants
+data:    8 bytes (Flash→RAM) - Initialized variables
+bss:  1568 bytes (RAM) - Uninitialized variables + stack
 ```
 
 **4. Clean Build Artifacts**
@@ -413,10 +343,10 @@ make clean
 
 **5. Rebuild Everything**
 ```bash
-make clean && make all
+make clean && make
 ```
 
-#### Build from VSCode
+### Build from VSCode
 
 **Quick Build:**
 - Press `Ctrl+Shift+B` (runs default build task)
@@ -426,10 +356,9 @@ Press `Ctrl+Shift+P`, type "Run Task", select:
 - **Build Project** - Compile everything
 - **Clean Project** - Remove build files
 - **Rebuild Project** - Clean then build
-- **Show Memory Usage** - Display detailed memory stats
-- **Generate Disassembly** - Create assembly listing
+- **Flash Project** - Program the microcontroller
 
-#### Manual Build Commands (Without Makefile)
+### Manual Build Commands (Without Makefile)
 
 If you want to understand what the Makefile does, here are the manual commands:
 
@@ -479,54 +408,39 @@ arm-none-eabi-size build/program.elf
 
 Once you have a `.hex` or `.bin` file, you need to **flash** it to the microcontroller's Flash memory.
 
-### Method 1: Using a Debug Probe (Recommended)
-
-The LPC-P1343 board likely has a debug connector (JTAG or SWD).
+### Method 1: Using ST-Link Debug Probe (Recommended)
 
 **Hardware needed:**
-- Debug probe (examples: J-Link, ST-Link, LPC-Link)
-- Connects PC to microcontroller debug pins
+- ST-Link V2 debug probe (~$10-15)
+- Connects to SWD pins on the LPC-P1343 board
 
-**In IAR Embedded Workbench:**
-1. Click "Project → Download and Debug" (`Ctrl+D`)
-2. IDE automatically:
-   - Compiles code
-   - Converts to flashable format
-   - Programs the microcontroller via debug probe
-   - Starts debugging session
-
-**With GCC + OpenOCD:**
+**Flash with make:**
 ```bash
 make flash
 ```
 
-Or manually:
+**Or manually with OpenOCD:**
 ```bash
 openocd -f interface/stlink.cfg -f target/lpc13xx.cfg \
-    -c "program build/lpc1343_getting_started.elf reset exit"
+    -c "program build/project.elf reset exit"
 ```
-
-Common OpenOCD interface configs:
-- `interface/stlink.cfg` - ST-Link (recommended, widely available)
-- `interface/cmsis-dap.cfg` - Generic CMSIS-DAP probe
-- `interface/jlink.cfg` - Segger J-Link
 
 **How it works:**
 ```
-PC ←→ [USB] ←→ [Debug Probe] ←→ [SWD/JTAG] ←→ [LPC1343]
+PC ←→ [USB] ←→ [ST-Link] ←→ [SWD] ←→ [LPC1343]
 ```
 
-The debug probe:
-- Writes `.hex` or `.bin` data into Flash memory
-- Can set breakpoints
+The ST-Link:
+- Writes firmware into Flash memory
+- Can set breakpoints for debugging
 - Can read/write RAM and registers in real-time
 
-### Method 2: USB Bootloader (LPC1343 Specific)
+### Method 2: USB Bootloader (No Debug Probe Needed)
 
-The LPC1343 has a built-in USB bootloader. **Works with both IAR and GCC** - just use the `.bin` file:
+The LPC1343 has a built-in USB bootloader:
 
 1. **Enter Bootloader Mode:**
-   - Hold bootloader button while plugging in USB
+   - Hold the ISP/bootloader button while plugging in USB
    - Or short ISP pin to GND while resetting
    - Board appears as USB Mass Storage device
 
@@ -534,9 +448,6 @@ The LPC1343 has a built-in USB bootloader. **Works with both IAR and GCC** - jus
    - A drive appears: `CRP DISABLD` or similar
    - Delete existing `firmware.bin` (if present)
    - Drag and drop your `.bin` file to the drive
-     - IAR: `Debug/LPC-P1343_LEDs_Running_Light.bin`
-     - GCC: `build/lpc1343_getting_started.bin`
-   - Board automatically programs itself (LED may blink)
 
 3. **Reset:**
    - Eject the drive safely
@@ -547,29 +458,22 @@ The LPC1343 has a built-in USB bootloader. **Works with both IAR and GCC** - jus
 
 ### Method 3: Serial Bootloader (UART)
 
-Flash via UART using the `lpc21isp` tool. Requires UART connection to the board.
+Flash via UART using the `lpc21isp` tool:
 
-**Command (requires lpc21isp installed):**
 ```bash
 # Syntax: lpc21isp -bin <file> <port> <baud> <crystal_khz>
-lpc21isp -bin build/lpc1343_getting_started.bin COM3 115200 12000
+lpc21isp -bin build/project.bin /dev/ttyUSB0 115200 12000
 
-# Linux/Mac example:
-lpc21isp -bin build/lpc1343_getting_started.bin /dev/ttyUSB0 115200 12000
+# Windows example:
+lpc21isp -bin build/project.bin COM3 115200 12000
 ```
-
-**Parameters:**
-- `build/lpc1343_getting_started.bin` - Your firmware binary
-- `COM3` (Windows) or `/dev/ttyUSB0` (Linux) - Serial port
-- `115200` - Baud rate
-- `12000` - Crystal frequency in KHz (12 MHz = 12000)
 
 **Hardware Connection:**
 ```
-PC UART ←→ LPC1343 UART
-TX   →   RX (P1.6)
-RX   ←   TX (P1.7)
-GND  ←→  GND
+USB-UART Adapter    LPC1343
+TX   →              RX (P1.6)
+RX   ←              TX (P1.7)
+GND  ←→             GND
 ```
 
 ---
@@ -583,10 +487,6 @@ GND  ←→  GND
                          ↓
     ┌──────────────────────────────────────┐
     │  Write Code: main.c, headers, etc.   │
-    └──────────────────────────────────────┘
-                         ↓
-    ┌──────────────────────────────────────┐
-    │  Configure: .icf linker script       │
     └──────────────────────────────────────┘
                          ↓
 ┌──────────────────────────────────────────────────────┐
@@ -611,7 +511,7 @@ GND  ←→  GND
     └──────────────────────────────────────┘
                          ↓
     ┌──────────────────────────────────────┐
-    │  Convert: .elf → .hex or .bin        │
+    │  Convert: .elf → .hex and .bin       │
     └──────────────────────────────────────┘
                          ↓
 ┌──────────────────────────────────────────────────────┐
@@ -619,7 +519,7 @@ GND  ←→  GND
 └──────────────────────────────────────────────────────┘
                          ↓
     ┌──────────────────────────────────────┐
-    │  Connect debug probe or USB cable    │
+    │  Connect ST-Link or USB cable        │
     └──────────────────────────────────────┘
                          ↓
     ┌──────────────────────────────────────┐
@@ -632,7 +532,6 @@ GND  ←→  GND
                          ↓
     ┌──────────────────────────────────────┐
     │  Your code runs on hardware!         │
-    │  LED blinks! 🎉                      │
     └──────────────────────────────────────┘
 ```
 
@@ -646,13 +545,12 @@ After flashing, this is what's in the LPC1343's memory:
 ```
 Address      Content
 0x00000000:  [Vector Table]
-             - Stack pointer: 0x10002000 (top of RAM + 1, SP points to next free)
+             - Stack pointer: 0x10002000 (top of RAM)
              - Reset handler: 0x000001C5 (bit 0 set = Thumb mode)
              - Interrupt handlers...
 
 0x00000124:  [Your Code]
              - main() function
-             - init_devices() function
              - All your C code compiled to ARM instructions
 
 0x00003000:  [Constant Data]
@@ -679,7 +577,7 @@ Address      Content (after startup, before main)
 ```
 Address      Peripheral
 0x50000000+: GPIO ports
-0x40000000+: Timers, UART, etc.
+0x40000000+: Timers, UART, I2C, SPI, etc.
 ```
 
 ---
@@ -690,20 +588,41 @@ Address      Peripheral
 
 **Error: "undefined reference to `function_name`"**
 - Function is declared but not defined
-- Forgot to add a .c file to the project
+- Forgot to add a .c file to the Makefile
 - Misspelled function name
 
-**Error: "region ROM overflowed"**
+**Error: "region FLASH overflowed"**
 - Your code is too big for Flash (>32 KB)
 - Need to optimize or remove features
+- Try higher optimization level (`-Os` for size)
 
 **Error: "region RAM overflowed"**
 - Too many global variables or large arrays
-- Reduce variable sizes or use Flash for const data
+- Reduce variable sizes or use `const` for read-only data
 
 **Error: "multiple definition of `variable`"**
-- Variable defined in .h file (should only declare)
+- Variable defined in .h file (should only declare with `extern`)
 - Same variable defined in multiple .c files
+
+**Warning: "implicit declaration of function"**
+- Missing `#include` for the header that declares the function
+- Function used before it's declared
+
+### Common Flashing Issues
+
+**ST-Link not detected:**
+- Check USB cable (some are charge-only)
+- Install ST-Link drivers
+- Try different USB port
+
+**OpenOCD can't connect:**
+- Verify wiring (SWDIO, SWCLK, GND)
+- Check target power
+- Try slower speed: add `-c "adapter speed 100"` to OpenOCD command
+
+**USB bootloader drive doesn't appear:**
+- Hold ISP button while connecting USB
+- Check if CRP (Code Read Protection) is enabled
 
 ---
 
@@ -715,148 +634,27 @@ Address      Peripheral
    - Does LED blink?
    - Expected behavior?
 
-2. **Debugger Check:**
-   - Set breakpoint in `main()`
-   - Press F5 to run
-   - Hit breakpoint?
-   - Step through code with F10
-
-3. **Memory Verification:**
-   - View memory window at 0x00000000
-   - Should see vector table
-   - View memory at 0x10000000
-   - Should see RAM variables
-
-4. **Serial Output (if available):**
+2. **Serial Output (if available):**
    - Connect UART to PC
-   - Use terminal program
+   - Use terminal program (minicom, screen, PuTTY)
    - Print debug messages
 
----
+3. **Debugger Check (with ST-Link + GDB):**
+   ```bash
+   # Terminal 1: Start OpenOCD
+   openocd -f interface/stlink.cfg -f target/lpc13xx.cfg
 
-## Part 10: IAR vs GCC - Complete Comparison
-
-### Side-by-Side Comparison
-
-| Feature | IAR EWARM | GCC ARM (arm-none-eabi) |
-|---------|-----------|--------------------------|
-| **Cost** | $3,000-6,000/license | **FREE** (open source) |
-| **IDE** | Integrated (IAR EWARM) | Use any (VSCode, Eclipse, CLI) |
-| **Startup File** | `cstartup_M.s` (IAR syntax) | `startup_lpc1343_gcc.s` (GNU syntax) |
-| **Linker Script** | `.icf` format | `.ld` format |
-| **Build System** | `.ewp` project files | `Makefile` or CMake |
-| **Build Command** | F7 or click Build | `make` or `make all` |
-| **Code Size** | Smaller (5-15% advantage) | Slightly larger |
-| **Optimization** | Excellent | Very good |
-| **C Standard** | C99/C11/C++14 | C99/C11/C++17/C++20 |
-| **Support** | Commercial ($$$) | Community (free) |
-| **Debugging** | Integrated debugger | GDB + OpenOCD |
-| **Industry Use** | Professional/commercial | Open source + commercial |
-
-### What's Compatible Between Toolchains
-
-✅ **These work with BOTH:**
-- `main.c` and most application code (95%+)
-- Hardware register definitions
-- Algorithm and logic code
-- Most C standard library functions
-- Memory layout concepts (Flash at 0x00000000, RAM at 0x10000000)
-
-❌ **These are INCOMPATIBLE:**
-- Startup assembly files (different syntax)
-- Linker scripts (different formats)
-- Project/workspace files (completely different)
-- Compiler-specific intrinsics (`__disable_interrupt()` vs `__disable_irq()`)
-- Assembly syntax (`DCD` vs `.word`, `SECTION` vs `.section`)
-
-### When to Use IAR
-
-Choose IAR if:
-- Your company already has licenses
-- You need commercial support
-- Working on safety-critical systems (automotive, medical)
-- Code size optimization is critical (every byte counts)
-- You prefer integrated all-in-one IDE
-- Budget is not a constraint
-
-### When to Use GCC
-
-Choose GCC if:
-- You're learning or hobbyist (it's free!)
-- Working on open source projects
-- You prefer command-line tools or VSCode
-- Need latest C/C++ standards
-- Want complete control over build process
-- Contributing to community projects
-
-### Real-World Perspective
-
-**Both toolchains are professional-grade and widely used:**
-
-**GCC ARM is used in:**
-- Raspberry Pi Pico SDK
-- Arduino ARM boards
-- Zephyr RTOS
-- Most open-source ARM projects
-- Many commercial products
-
-**IAR is used in:**
-- Automotive ECUs
-- Medical devices
-- Industrial control systems
-- Aerospace applications
-- Products requiring DO-178B/ISO 26262 certification
-
-### Performance Comparison
-
-Using this LPC1343 LED blink example:
-
-| Metric | IAR (estimated) | GCC -O2 (estimated) | Difference |
-|--------|---------|------------|-----------|
-| Code Size | ~4.2 KB | ~4.5 KB | +7% |
-| RAM Usage | Same | Same | None |
-| Execution Speed | Slightly faster | Very close | ~2-3% |
-| Compilation Time | Fast | Fast | Similar |
-
-**Bottom Line:** GCC produces excellent code that's 5-10% larger than IAR. For a 32KB Flash chip, this rarely matters.
-
-### Converting IAR Projects to GCC
-
-If you have IAR code and want to use GCC:
-
-1. **Keep as-is:**
-   - `main.c` and application code
-   - Header files
-
-2. **Replace:**
-   - `cstartup_M.s` → `startup_lpc1343_gcc.s`
-   - `LPC1343_Flash.icf` → `lpc1343_flash.ld`
-   - `.ewp` files → `Makefile`
-
-3. **Modify (if needed):**
-   ```c
-   // IAR-specific                 // GCC equivalent
-   __disable_interrupt()     →     __disable_irq()
-   __enable_interrupt()      →     __enable_irq()
-   __no_operation()          →     __asm volatile("nop")
+   # Terminal 2: Start GDB
+   arm-none-eabi-gdb build/project.elf
+   (gdb) target remote :3333
+   (gdb) monitor reset halt
+   (gdb) break main
+   (gdb) continue
    ```
 
-4. **Test and verify:**
-   - Build with `make`
-   - Check memory usage: `make size`
-   - Flash and test on hardware
-
-### Recommendation for Beginners
-
-**Start with GCC** because:
-1. It's free - no licensing hassles
-2. Large community and lots of tutorials
-3. Works on all platforms (Windows, Linux, Mac)
-4. Skills transfer to other projects
-5. Understanding Makefiles teaches build process
-6. VSCode integration is excellent
-
-You can always learn IAR later if your job requires it. The concepts (interrupts, timers, peripherals, memory layout) are identical - only the tools differ.
+4. **Memory Verification:**
+   - In GDB: `x/10x 0x00000000` to view vector table
+   - Should see stack pointer and reset handler addresses
 
 ---
 
@@ -866,7 +664,7 @@ You can always learn IAR later if your job requires it. The concepts (interrupts
 
 2. **Build process** compiles → assembles → links → converts to create firmware
 
-3. **Linker script** (.icf) defines where code/data goes in memory
+3. **Linker script** (.ld) defines where code/data goes in memory
 
 4. **Firmware file** (.hex or .bin) is what you flash to the microcontroller
 
@@ -883,10 +681,10 @@ You can always learn IAR later if your job requires it. The concepts (interrupts
 ## Further Learning
 
 1. **Read map file** (`.map`) to see exactly where everything is in memory
-2. **Examine .lst file** to see assembly code generated from your C code
+2. **Examine startup code** - See [Appendix D](appendix/D-startup-assembly-explained.md)
 3. **Learn ARM Cortex-M3 assembly** to understand what compiler generates
 4. **Study linker scripts** to understand advanced memory layouts
-5. **Explore optimization flags** (-O0, -O1, -O2, -O3) and their effects
+5. **Explore optimization flags** (-O0, -O1, -O2, -O3, -Os) and their effects
 
 ---
 

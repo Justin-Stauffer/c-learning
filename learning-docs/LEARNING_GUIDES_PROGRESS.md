@@ -8,7 +8,7 @@ This document tracks the creation of educational reference guides for embedded C
 
 **Project:** LPC1343 Embedded Programming Learning Library
 **Last Updated:** 2025-12-03
-**Toolchain:** GCC ARM (arm-none-eabi) + IAR EWARM
+**Toolchain:** GCC ARM (arm-none-eabi)
 **Target:** LPC1343 (ARM Cortex-M3)
 **Format:** Book-style sequential curriculum with quick reference support
 

@@ -19,19 +19,11 @@ This project has been set up to build with the GCC ARM toolchain (`arm-none-eabi
 
 ## Project Files
 
-### GCC-Specific Files (Use These)
-- `startup_lpc1343_gcc.s` - GCC-compatible startup code
-- `lpc1343_flash.ld` - GCC linker script
+- `startup_lpc1343_gcc.s` - Startup code (initializes hardware before main)
+- `lpc1343_flash.ld` - Linker script (defines memory layout)
 - `Makefile` - Build automation
 - `.vscode/tasks.json` - VSCode build tasks
-
-### IAR-Specific Files (Ignore These if Using GCC)
-- `cstartup_M.s` - IAR startup code (don't use with GCC)
-- `LPC1343_Flash.icf` - IAR linker script (don't use with GCC)
-- `*.ewp`, `*.ewd`, `*.eww` - IAR project files (don't use with GCC)
-
-### Universal Files (Use with Both)
-- `main.c` - Your application code (works with both toolchains)
+- `main.c` - Your application code
 
 ## Building from Command Line
 
@@ -158,51 +150,23 @@ set PATH=%PATH%;C:\Program Files\GNU Arm Embedded Toolchain\10 2021.10\bin
 2. Remove unused code
 3. Use `--gc-sections` linker flag (already enabled)
 
-## Comparing IAR vs GCC Output
+## ARM Intrinsics Reference
 
-If you have both toolchains installed:
-
-```bash
-# Build with GCC
-make clean && make all
-make size
-
-# Build with IAR
-# (open in IAR and build)
-
-# Compare code sizes
-```
-
-Typically:
-- IAR produces 5-15% smaller code
-- GCC is free and open source
-- Both produce working firmware
-
-## Code Changes for GCC Compatibility
-
-The IAR example code uses IAR-specific intrinsics. Replace them:
+GCC provides built-in functions for common ARM operations:
 
 ### Interrupt Control
 ```c
-// IAR version (don't use with GCC)
-__disable_interrupt();
-__enable_interrupt();
-
-// GCC version (use this)
+// Disable/enable interrupts
 __disable_irq();
 __enable_irq();
 
-// Or portable version (works with both)
+// Or inline assembly
 __asm volatile ("cpsid i" : : : "memory");  // disable
 __asm volatile ("cpsie i" : : : "memory");  // enable
 ```
 
 ### No Operation
 ```c
-// IAR version
-__no_operation();
-
-// GCC version
 __asm volatile ("nop");
 ```
 
